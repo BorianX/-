@@ -45,7 +45,7 @@
             transition: background 0.3s, color 0.3s;
         }
         .container {
-            max-width: 450px;
+            max-width: 480px;
             margin: 0 auto;
             background: var(--container-bg);
             padding: 20px;
@@ -63,7 +63,7 @@
         /* Navigation Tabs */
         .nav-tabs {
             display: flex;
-            gap: 8px;
+            gap: 4px;
             margin-bottom: 15px;
             background: var(--box-bg);
             padding: 4px;
@@ -72,8 +72,8 @@
         }
         .nav-btn {
             flex: 1;
-            padding: 8px;
-            font-size: 13px;
+            padding: 8px 4px;
+            font-size: 11px;
             font-weight: bold;
             border: none;
             background: none;
@@ -81,6 +81,7 @@
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
+            text-align: center;
         }
         .nav-btn.active {
             background: var(--container-bg);
@@ -174,7 +175,7 @@
             border-radius: 4px;
         }
 
-        ul { list-style: none; padding: 0; max-height: 220px; overflow-y: auto; }
+        ul { list-style: none; padding: 0; max-height: 250px; overflow-y: auto; }
         li {
             display: flex;
             justify-content: space-between;
@@ -205,12 +206,58 @@
             height: 190px;
             margin: 15px 0;
         }
-        .backup-group {
-            display: flex;
-            gap: 5px;
-        }
+        .backup-group { display: flex; gap: 5px; }
 
-        /* Styles สำหรับหน้า โน้ต */
+        /* Calendar Styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .cal-day-name {
+            font-size: 11px;
+            font-weight: bold;
+            color: #888;
+            padding: 4px 0;
+        }
+        .cal-cell {
+            background: var(--box-bg);
+            border: 1px solid var(--box-border);
+            border-radius: 6px;
+            min-height: 48px;
+            padding: 2px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .cal-cell.today {
+            border: 2px solid var(--accent-color);
+            font-weight: bold;
+        }
+        .cal-dots {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            margin-top: 2px;
+        }
+        .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+        .dot-inc { background: #27ae60; }
+        .dot-exp { background: #e74c3c; }
+
+        /* Timeline & Note Styles */
+        .running-bal {
+            font-size: 11px;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
         .note-card {
             background: var(--li-bg);
             border: 1px solid var(--box-border);
@@ -219,38 +266,13 @@
             margin-bottom: 8px;
             position: relative;
         }
-        .note-card.pinned {
-            border-left: 4px solid #f1c40f;
-        }
-        .note-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 5px;
-        }
-        .note-title {
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-        .note-content {
-            font-size: 13px;
-            white-space: pre-wrap;
-            margin-bottom: 8px;
-        }
-        .note-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .tag-badge {
-            font-size: 10px;
-            background: var(--quick-btn-bg);
-            color: var(--quick-btn-text);
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
+        .note-card.pinned { border-left: 4px solid #f1c40f; }
+        .note-header { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 5px; }
+        .note-title { font-weight: bold; font-size: 14px; margin-bottom: 4px; }
+        .note-content { font-size: 13px; white-space: pre-wrap; margin-bottom: 8px; }
+        .note-footer { display: flex; justify-content: space-between; align-items: center; }
+        .tag-badge { font-size: 10px; background: var(--quick-btn-bg); color: var(--quick-btn-text); padding: 2px 6px; border-radius: 4px; }
+        
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
@@ -263,15 +285,16 @@
         <button class="theme-btn" onclick="toggleTheme()">🌓 สลับโหมด</button>
     </div>
 
-    <!-- ปุ่มสลับหน้า บัญชี vs โน้ต -->
+    <!-- Navigation Tabs -->
     <div class="nav-tabs">
-        <button class="nav-btn active" onclick="switchTab('finance')">💰 รายรับ-รายจ่าย</button>
-        <button class="nav-btn" onclick="switchTab('notes')">💡 โน้ต & ไอเดีย</button>
+        <button class="nav-btn active" onclick="switchTab('finance')">💰 บัญชี</button>
+        <button class="nav-btn" onclick="switchTab('calendar')">📅 ปฏิทิน</button>
+        <button class="nav-btn" onclick="switchTab('recurring')">🔔 รายการประจำ</button>
+        <button class="nav-btn" onclick="switchTab('notes')">💡 โน้ต</button>
     </div>
     
     <!-- ==================== TAB 1: บัญชีรายรับ-รายจ่าย ==================== -->
     <div id="tab-finance" class="tab-content active">
-        <!-- เลือกเดือน & ตั้งงบประมาณ -->
         <div class="section-box">
             <label for="month-filter">📅 ดูข้อมูลเดือน:</label>
             <select id="month-filter" onchange="updateUI()"></select>
@@ -281,7 +304,6 @@
             <div id="budget-status" class="budget-alert"></div>
         </div>
 
-        <!-- สรุปยอดเงิน -->
         <div class="summary">
             <div>
                 <h3>รายรับ</h3>
@@ -297,12 +319,10 @@
             </div>
         </div>
 
-        <!-- กราฟแสดงสัดส่วน -->
         <div class="chart-container">
             <canvas id="expenseChart"></canvas>
         </div>
 
-        <!-- ฟอร์มกรอกข้อมูล -->
         <form id="transaction-form" class="section-box">
             <label>✍️ เพิ่มรายการใหม่:</label>
             <select id="type">
@@ -334,16 +354,13 @@
             <button type="submit" class="btn-success" style="margin-top: 10px;">➕ บันทึกรายการ</button>
         </form>
 
-        <!-- ช่องค้นหาประวัติ -->
         <div class="section-box" style="padding: 8px; margin-bottom: 8px;">
             <input type="text" id="search-input" placeholder="🔍 ค้นหาประวัติ..." oninput="updateUI()" style="margin: 0;">
         </div>
 
-        <!-- ประวัติรายการ -->
-        <h3 style="font-size: 15px; margin-bottom: 5px;">📜 ประวัติรายการ</h3>
+        <h3 style="font-size: 15px; margin-bottom: 5px;">⚡ ไทม์ไลน์กระแสเงินสด & รายการย้อนหลัง</h3>
         <ul id="transaction-list"></ul>
 
-        <!-- ปุ่มสำรองข้อมูล -->
         <div style="margin-top: 15px;">
             <div class="backup-group">
                 <button class="btn-warning" onclick="exportData()">💾 สำรองข้อมูล</button>
@@ -357,14 +374,55 @@
         </div>
     </div>
 
-    <!-- ==================== TAB 2: โน้ต & ไอเดีย ==================== -->
+    <!-- ==================== TAB 2: ปฏิทินการเงิน (Calendar) ==================== -->
+    <div id="tab-calendar" class="tab-content">
+        <div class="section-box">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <button class="icon-btn" onclick="changeCalMonth(-1)">◀️</button>
+                <strong id="cal-month-title" style="font-size:15px;"></strong>
+                <button class="icon-btn" onclick="changeCalMonth(1)">▶️</button>
+            </div>
+            <div class="calendar-grid">
+                <div class="cal-day-name">อา</div><div class="cal-day-name">จ</div><div class="cal-day-name">อ</div>
+                <div class="cal-day-name">พ</div><div class="cal-day-name">พฤ</div><div class="cal-day-name">ศ</div><div class="cal-day-name">ส</div>
+            </div>
+            <div id="calendar-body" class="calendar-grid"></div>
+        </div>
+        <div id="cal-selected-details" class="section-box" style="display:none;">
+            <h4 id="cal-selected-date-title" style="margin:0 0 8px 0;"></h4>
+            <ul id="cal-selected-list" style="max-height:150px;"></ul>
+        </div>
+    </div>
+
+    <!-- ==================== TAB 3: รายการประจำ (Recurring Bills/Income) ==================== -->
+    <div id="tab-recurring" class="tab-content">
+        <div class="section-box">
+            <button class="btn-info" onclick="applyRecurringForCurrentMonth()">⚡ ดึงรายการประจำเข้าเดือนนี้อัตโนมัติ</button>
+        </div>
+
+        <form id="recurring-form" class="section-box">
+            <label>🔔 เพิ่มรายการประจำใหม่:</label>
+            <select id="rec-type">
+                <option value="รายรับ">📥 รายรับ (เช่น เงินเดือน)</option>
+                <option value="รายจ่าย" selected>📤 รายจ่าย (เช่น ค่าเน็ต, Netflix)</option>
+            </select>
+            <input type="text" id="rec-category" placeholder="หมวดหมู่ (เช่น 💵 เงินเดือน, 📶 ค่าเน็ต)" required>
+            <input type="number" id="rec-amount" placeholder="จำนวนเงิน (บาท)" required step="any">
+            <label>📅 ทุกๆ วันที่ของเดือน (1 - 31):</label>
+            <input type="number" id="rec-day" min="1" max="31" placeholder="เช่น 25" required>
+            <button type="submit" class="btn-success" style="margin-top: 5px;">➕ บันทึกรายการประจำ</button>
+        </form>
+
+        <h3 style="font-size: 15px; margin-bottom: 5px;">📜 รายการประจำทั้งหมด</h3>
+        <ul id="recurring-list"></ul>
+    </div>
+
+    <!-- ==================== TAB 4: โน้ต & ไอเดีย ==================== -->
     <div id="tab-notes" class="tab-content">
-        <!-- ฟอร์มสร้างโน้ต -->
         <form id="note-form" class="section-box">
             <label>💡 จดโน้ต / ไอเดียใหม่:</label>
-            <input type="text" id="note-title" placeholder="หัวข้อโน้ต (เช่น ของต้องซื้อ, ไอเดียงาน)..." required>
-            <textarea id="note-content" rows="3" placeholder="รายละเอียด... (ถ้ามีจำนวนเงิน เช่น 150 บาท จะส่งข้ามไปบันทึกบัญชีได้ง่ายขึ้น)"></textarea>
-            
+            <input type="text" id="note-title" placeholder="หัวข้อโน้ต..." required>
+            <textarea id="note-content" rows="3" placeholder="รายละเอียด... (ถ้ามีจำนวนเงินจะแปลงเป็นรายจ่ายได้ง่ายขึ้น)"></textarea>
             <div style="display: flex; gap: 5px;">
                 <select id="note-tag" style="flex: 1;">
                     <option value="🛍️ Shopping">🛍️ Shopping</option>
@@ -376,7 +434,6 @@
             </div>
         </form>
 
-        <!-- กรองแท็กโน้ต -->
         <div class="quick-buttons" style="margin-bottom: 10px;">
             <button type="button" onclick="filterNotes('ALL')">ทั้งหมด</button>
             <button type="button" onclick="filterNotes('🛍️ Shopping')">🛍️ Shopping</button>
@@ -384,7 +441,6 @@
             <button type="button" onclick="filterNotes('PINNED')">⭐ ปักหมุด</button>
         </div>
 
-        <!-- รายการโน้ต -->
         <div id="notes-list"></div>
     </div>
 </div>
@@ -394,32 +450,40 @@
     let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
     let budgets = JSON.parse(localStorage.getItem('budgets')) || {};
     let notes = JSON.parse(localStorage.getItem('notes')) || [];
+    let recurrings = JSON.parse(localStorage.getItem('recurrings')) || [];
     let activeNoteFilter = 'ALL';
+    let currentCalDate = new Date();
 
     // ธีมมืด/สว่าง
     function toggleTheme() {
         const body = document.body;
-        const currentTheme = body.getAttribute('data-theme');
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        body.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
+        const currentTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', currentTheme);
+        localStorage.setItem('theme', currentTheme);
         updateUI();
     }
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.body.setAttribute('data-theme', savedTheme);
 
-    // สลับหน้า แท็บ
+    // สลับแท็บหน้า
     function switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
         
+        const targetBtn = event ? event.target : document.querySelectorAll('.nav-btn')[0];
+        targetBtn.classList.add('active');
+
         if(tabName === 'finance') {
             document.getElementById('tab-finance').classList.add('active');
-            event.target.classList.add('active');
             updateUI();
+        } else if(tabName === 'calendar') {
+            document.getElementById('tab-calendar').classList.add('active');
+            renderCalendar();
+        } else if(tabName === 'recurring') {
+            document.getElementById('tab-recurring').classList.add('active');
+            renderRecurrings();
         } else {
             document.getElementById('tab-notes').classList.add('active');
-            event.target.classList.add('active');
             renderNotes();
         }
     }
@@ -514,18 +578,23 @@
         let totalExpense = 0;
         let categoryMap = {};
 
+        // คัดกรองและเรียงลำดับรายการตามวันที่จากอดีตไปปัจจุบันเพื่อคิด ยอดเงินคงเหลือสะสม (Running Balance)
         const filteredTransactions = transactions.filter(t => {
             const matchMonth = t.date && t.date.startsWith(selectedMonth);
             const matchSearch = (t.category + ' ' + (t.desc || '') + ' ' + t.amount).toLowerCase().includes(searchQuery);
             return matchMonth && matchSearch;
-        });
+        }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        let runningBalance = 0;
 
         filteredTransactions.forEach((t) => {
             const originalIndex = transactions.indexOf(t);
             if (t.type === 'รายรับ') {
                 totalIncome += t.amount;
+                runningBalance += t.amount;
             } else {
                 totalExpense += t.amount;
+                runningBalance -= t.amount;
                 categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount;
             }
 
@@ -534,14 +603,14 @@
             li.innerHTML = `
                 <div>
                     <strong>[${t.type}] ${t.category}</strong> ${t.desc ? '('+t.desc+')' : ''}<br>
-                    <span class="date-text">📅 ${t.date}</span><br>
+                    <span class="date-text">📅 ${t.date}</span> | <span class="running-bal">คงเหลือสะสม: ${runningBalance.toLocaleString()} ฿</span><br>
                     <span style="color:${t.type === 'รายรับ' ? '#27ae60' : '#e74c3c'}; font-weight:bold;">
                         ${t.amount.toLocaleString()} บาท
                     </span>
                 </div>
                 <button class="icon-btn" onclick="deleteTransaction(${originalIndex})">❌</button>
             `;
-            listElement.appendChild(li);
+            listElement.prepend(li); // แสดงรายการล่าสุดอยู่บนสุด
         });
 
         const balance = totalIncome - totalExpense;
@@ -557,36 +626,24 @@
     function updateChart(categoryMap, totalIncome) {
         const ctx = document.getElementById('expenseChart').getContext('2d');
         const expenseCategories = Object.keys(categoryMap);
-        const expenseData = Object.values(categoryMap);
         const isDark = document.body.getAttribute('data-theme') === 'dark';
 
-        // ชุดสีแดงหลายๆ เฉด เพื่อแยกแต่ละหมวดหมู่รายจ่ายให้เห็นเป็นขอบแยกกัน แต่คุมโทนสีแดงทั้งหมด
-        const redShades = [
-            '#e74c3c', // แดงหลัก
-            '#c0392b', // แดงเข้ม
-            '#ff6b6b', // แดงพาสเทลสว่าง
-            '#d63031', // แดงเข้มสด
-            '#ff4757', // แดงอมชมพูสด
-            '#b2bec3', 
-            '#e84118'
-        ];
+        const redShades = ['#e74c3c', '#c0392b', '#ff6b6b', '#d63031', '#ff4757', '#b2bec3', '#e84118'];
 
         let labels = [];
         let data = [];
         let colors = [];
 
-        // เพิ่ม "รายรับ" เป็นสีเขียว
         if (totalIncome > 0) {
             labels.push('รายรับ');
             data.push(totalIncome);
-            colors.push('#27ae60'); // สีเขียวสำหรับรายรับ
+            colors.push('#27ae60');
         }
 
-        // เพิ่มหมวดหมู่ "รายจ่าย" แต่ละหมวด เป็นเฉดสีแดงทั้งหมด
         expenseCategories.forEach((cat, index) => {
             labels.push(cat);
             data.push(categoryMap[cat]);
-            colors.push(redShades[index % redShades.length]); // ใช้สีแดงวนลูปตามจำนวนหมวดหมู่
+            colors.push(redShades[index % redShades.length]);
         });
 
         if (expenseChart) expenseChart.destroy();
@@ -631,29 +688,181 @@
         }
     }
 
-    // ==================== NOTES & CONNECTED FEATURE ====================
-    const noteForm = document.getElementById('note-form');
-    const noteTitleInput = document.getElementById('note-title');
-    const noteContentInput = document.getElementById('note-content');
-    const noteTagInput = document.getElementById('note-tag');
-    const notesListEl = document.getElementById('notes-list');
+    // ==================== CALENDAR FEATURE ====================
+    function renderCalendar() {
+        const year = currentCalDate.getFullYear();
+        const month = currentCalDate.getMonth();
+        
+        document.getElementById('cal-month-title').textContent = `${formatMonthLabel(year + '-' + String(month + 1).padStart(2, '0'))}`;
+        
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const todayStr = new Date().toISOString().substring(0, 10);
+        
+        const calBody = document.getElementById('calendar-body');
+        calBody.innerHTML = '';
 
+        for(let i = 0; i < firstDay; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'cal-cell';
+            emptyCell.style.border = 'none';
+            calBody.appendChild(emptyCell);
+        }
+
+        for(let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayTx = transactions.filter(t => t.date === dateStr);
+            
+            const hasInc = dayTx.some(t => t.type === 'รายรับ');
+            const hasExp = dayTx.some(t => t.type === 'รายจ่าย');
+
+            const cell = document.createElement('div');
+            cell.className = `cal-cell ${dateStr === todayStr ? 'today' : ''}`;
+            cell.onclick = () => selectCalDate(dateStr, dayTx);
+            cell.innerHTML = `
+                <span>${day}</span>
+                <div class="cal-dots">
+                    ${hasInc ? '<div class="dot dot-inc"></div>' : ''}
+                    ${hasExp ? '<div class="dot dot-exp"></div>' : ''}
+                </div>
+            `;
+            calBody.appendChild(cell);
+        }
+    }
+
+    function changeCalMonth(diff) {
+        currentCalDate.setMonth(currentCalDate.getMonth() + diff);
+        renderCalendar();
+    }
+
+    function selectCalDate(dateStr, dayTx) {
+        const detailsBox = document.getElementById('cal-selected-details');
+        const titleEl = document.getElementById('cal-selected-date-title');
+        const listEl = document.getElementById('cal-selected-list');
+        
+        detailsBox.style.display = 'block';
+        titleEl.innerHTML = `📅 รายการวันที่ ${dateStr} <button class="icon-btn" onclick="quickAddOnDate('${dateStr}')">➕ เพิ่มรายการ</button>`;
+        listEl.innerHTML = '';
+
+        if(dayTx.length === 0) {
+            listEl.innerHTML = '<li style="color:#888;">ไม่มีรายการในวันนี้</li>';
+            return;
+        }
+
+        dayTx.forEach(t => {
+            const li = document.createElement('li');
+            li.className = t.type;
+            li.innerHTML = `
+                <span>[${t.type}] ${t.category} ${t.desc ? '('+t.desc+')' : ''}</span>
+                <strong style="color:${t.type==='รายรับ'?'#27ae60':'#e74c3c'}">${t.amount.toLocaleString()} ฿</strong>
+            `;
+            listEl.appendChild(li);
+        });
+    }
+
+    function quickAddOnDate(dateStr) {
+        document.getElementById('date').value = dateStr;
+        document.querySelectorAll('.nav-btn')[0].click();
+    }
+
+    // ==================== RECURRING FEATURE ====================
+    const recForm = document.getElementById('recurring-form');
+    recForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        recurrings.push({
+            id: Date.now(),
+            type: document.getElementById('rec-type').value,
+            category: document.getElementById('rec-category').value,
+            amount: parseFloat(document.getElementById('rec-amount').value),
+            day: parseInt(document.getElementById('rec-day').value)
+        });
+        localStorage.setItem('recurrings', JSON.stringify(recurrings));
+        document.getElementById('rec-category').value = '';
+        document.getElementById('rec-amount').value = '';
+        document.getElementById('rec-day').value = '';
+        renderRecurrings();
+    });
+
+    function renderRecurrings() {
+        const listEl = document.getElementById('recurring-list');
+        listEl.innerHTML = '';
+        if(recurrings.length === 0) {
+            listEl.innerHTML = '<li style="color:#888;">ยังไม่มีรายการประจำ</li>';
+            return;
+        }
+        recurrings.forEach((r, index) => {
+            const li = document.createElement('li');
+            li.className = r.type;
+            li.innerHTML = `
+                <div>
+                    <strong>[ทุกวันที่ ${r.day}] ${r.category}</strong><br>
+                    <span style="color:${r.type==='รายรับ'?'#27ae60':'#e74c3c'}; font-weight:bold;">${r.amount.toLocaleString()} บาท</span>
+                </div>
+                <button class="icon-btn" onclick="deleteRecurring(${index})">❌</button>
+            `;
+            listEl.appendChild(li);
+        });
+    }
+
+    function deleteRecurring(index) {
+        if(confirm("ต้องการลบรายการประจำนี้ใช่หรือไม่?")) {
+            recurrings.splice(index, 1);
+            localStorage.setItem('recurrings', JSON.stringify(recurrings));
+            renderRecurrings();
+        }
+    }
+
+    function applyRecurringForCurrentMonth() {
+        const currentYearMonth = new Date().toISOString().substring(0, 7);
+        let addedCount = 0;
+        
+        recurrings.forEach(r => {
+            const targetDay = String(r.day).padStart(2, '0');
+            const targetDate = `${currentYearMonth}-${targetDay}`;
+            
+            // เช็คว่าเคยถูกเพิ่มไปหรือยังเพื่อไม่ให้ซ้ำ
+            const exists = transactions.some(t => t.date === targetDate && t.category === r.category && t.amount === r.amount);
+            if(!exists) {
+                transactions.push({
+                    type: r.type,
+                    amount: r.amount,
+                    category: r.category,
+                    desc: 'รายการประจำอัตโนมัติ',
+                    date: targetDate
+                });
+                addedCount++;
+            }
+        });
+
+        if(addedCount > 0) {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            alert(`✅ ดึงรายการประจำเข้าเดือนนี้สำเร็จ ${addedCount} รายการ!`);
+            document.querySelectorAll('.nav-btn')[0].click();
+        } else {
+            alert("ℹ️ รายการประจำของเดือนนี้ถูกบันทึกไว้ครบถ้วนแล้วครับ");
+        }
+    }
+
+    // ==================== NOTES FEATURE ====================
+    const noteForm = document.getElementById('note-form');
     noteForm.addEventListener('submit', function(e) {
         e.preventDefault();
         notes.unshift({
             id: Date.now(),
-            title: noteTitleInput.value,
-            content: noteContentInput.value,
-            tag: noteTagInput.value,
+            title: document.getElementById('note-title').value,
+            content: document.getElementById('note-content').value,
+            tag: document.getElementById('note-tag').value,
             pinned: false,
             date: new Date().toLocaleDateString('th-TH')
         });
         localStorage.setItem('notes', JSON.stringify(notes));
-        noteTitleInput.value = ''; noteContentInput.value = '';
+        document.getElementById('note-title').value = '';
+        document.getElementById('note-content').value = '';
         renderNotes();
     });
 
     function renderNotes() {
+        const notesListEl = document.getElementById('notes-list');
         notesListEl.innerHTML = '';
         let filtered = notes;
         if(activeNoteFilter === 'PINNED') filtered = notes.filter(n => n.pinned);
@@ -672,25 +881,20 @@
                 <div class="note-footer">
                     <div>
                         <button class="icon-btn" onclick="togglePinNote(${note.id})" title="ปักหมุด">${note.pinned ? '⭐' : '☆'}</button>
-                        <button class="icon-btn" onclick="convertToExpense('${note.title}', '${note.content}')" title="ส่งไปบันทึกรายจ่าย">💸 แปลงเป็นรายจ่าย</button>
+                        <button class="icon-btn" onclick="convertToExpense('${note.title}', '${note.content}')">💸 แปลงเป็นรายจ่าย</button>
                     </div>
-                    <button class="icon-btn" onclick="deleteNote(${note.id})" title="ลบโน้ต">🗑️</button>
+                    <button class="icon-btn" onclick="deleteNote(${note.id})">🗑️</button>
                 </div>
             `;
             notesListEl.appendChild(card);
         });
     }
 
-    function filterNotes(tag) {
-        activeNoteFilter = tag;
-        renderNotes();
-    }
-
+    function filterNotes(tag) { activeNoteFilter = tag; renderNotes(); }
     function togglePinNote(id) {
         const n = notes.find(x => x.id === id);
         if(n) { n.pinned = !n.pinned; localStorage.setItem('notes', JSON.stringify(notes)); renderNotes(); }
     }
-
     function deleteNote(id) {
         if(confirm("ต้องการลบโน้ตนี้ใช่หรือไม่?")) {
             notes = notes.filter(x => x.id !== id);
@@ -698,13 +902,10 @@
             renderNotes();
         }
     }
-
     function convertToExpense(title, content) {
         const numbers = (title + ' ' + content).match(/\d+/g);
         let defaultAmount = numbers ? numbers[0] : '';
-        
         let amount = prompt(`คุณต้องการเปลี่ยนโน้ต "${title}" เป็นรายการรายจ่ายใช่หรือไม่?\nโปรดใส่จำนวนเงิน (บาท):`, defaultAmount);
-        
         if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
             const today = new Date().toISOString().substring(0, 10);
             transactions.push({
@@ -715,22 +916,21 @@
                 date: today
             });
             localStorage.setItem('transactions', JSON.stringify(transactions));
-            alert(`✅ บันทึก "${title}" เป็นรายจ่ายจำนวน ${amount} บาท เรียบร้อยแล้ว!`);
-            
+            alert(`✅ บันทึก "${title}" เป็นรายจ่ายเรียบร้อยแล้ว!`);
             document.querySelectorAll('.nav-btn')[0].click();
         }
     }
 
-    // Backup / Import / Export
+    // ==================== BACKUP / IMPORT / EXPORT ====================
     function clearAllData() {
         if(confirm("⚠️ คำเตือน: ข้อมูลทั้งหมดจะถูกลบ ต้องการลบจริงหรือไม่?")) {
-            transactions = []; budgets = {}; notes = [];
+            transactions = []; budgets = {}; notes = []; recurrings = [];
             localStorage.clear();
-            updateUI(); renderNotes();
+            updateUI();
         }
     }
     function exportData() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({transactions, budgets, notes}));
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({transactions, budgets, notes, recurrings}));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
         downloadAnchor.setAttribute("download", "my_lifestyle_hub_backup.json");
@@ -759,10 +959,12 @@
                     transactions = parsed.transactions;
                     budgets = parsed.budgets || {};
                     notes = parsed.notes || [];
+                    recurrings = parsed.recurrings || [];
                     localStorage.setItem('transactions', JSON.stringify(transactions));
                     localStorage.setItem('budgets', JSON.stringify(budgets));
                     localStorage.setItem('notes', JSON.stringify(notes));
-                    updateUI(); renderNotes();
+                    localStorage.setItem('recurrings', JSON.stringify(recurrings));
+                    updateUI();
                     alert("✅ กู้คืนข้อมูลสำเร็จ!");
                 }
             } catch (err) { alert("❌ เกิดข้อผิดพลาดในการอ่านไฟล์"); }
