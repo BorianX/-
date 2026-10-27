@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกรายรับ-รายจ่าย Ultimate Pro</title>
+    <!-- โหลดไลบรารีวาดกราฟ Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --container-bg: #fff;
+            --text-color: #333;
+            --box-bg: #f8f9fa;
+            --box-border: #e9ecef;
+            --summary-bg: #ecf0f1;
+            --li-bg: #f9f9f9;
+            --input-bg: #fff;
+            --input-border: #bdc3c7;
+            --quick-btn-bg: #e2e8f0;
+            --quick-btn-text: #475569;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --box-bg: #2a2a2a;
+            --box-border: #333;
+            --summary-bg: #2c2c2c;
+            --li-bg: #252525;
+            --input-bg: #333;
+            --input-border: #444;
+            --quick-btn-bg: #333;
+            --quick-btn-text: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            transition: background 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 450px;
+            margin: 0 auto;
+            background: var(--container-bg);
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: background 0.3s;
+        }
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        h2 { margin: 0; color: #3498db; font-size: 20px; }
+        
+        .theme-btn {
+            background: none;
+            border: 1px solid var(--input-border);
+            color: var(--text-color);
+            padding: 5px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            width: auto;
+            margin: 0;
+        }
+
+        .section-box {
+            background: var(--box-bg);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid var(--box-border);
+        }
+        .section-box label { font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px; }
+        
+        .summary {
+            display: flex;
+            justify-content: space-between;
+            background: var(--summary-bg);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .summary div { text-align: center; flex: 1; }
+        .summary h3 { margin: 0; font-size: 13px; color: #888; }
+        .summary p { margin: 4px 0 0 0; font-size: 14px; font-weight: bold; }
+        .income { color: #27ae60 !important; }
+        .expense { color: #e74c3c !important; }
+        .balance { color: #3498db !important; }
+
+        .budget-alert {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover { opacity: 0.9; }
+        
+        .btn-danger { background-color: #e74c3c; }
+        .btn-success { background-color: #27ae60; }
+        .btn-warning { background-color: #f39c12; color: #fff; }
+        .btn-info { background-color: #9b59b6; }
+
+        /* ปุ่มเลือกวันที่และหมวดหมู่ด่วน */
+        .quick-buttons {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+        .quick-buttons button {
+            background-color: var(--quick-btn-bg);
+            color: var(--quick-btn-text);
+            font-size: 11px;
+            padding: 5px 8px;
+            margin: 0;
+            border: 1px solid var(--input-border);
+            width: auto;
+            flex: 1;
+            border-radius: 4px;
+        }
+
+        ul { list-style: none; padding: 0; max-height: 180px; overflow-y: auto; }
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            background: var(--li-bg);
+            border-left: 5px solid #ccc;
+            font-size: 13px;
+        }
+        li.รายรับ { border-left-color: #27ae60; }
+        li.รายจ่าย { border-left-color: #e74c3c; }
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            width: auto;
+            padding: 4px;
+            font-size: 12px;
+        }
+        .date-text { font-size: 11px; color: #888; }
+        
+        .chart-container {
+            position: relative;
+            height: 190px;
+            margin: 15px 0;
+        }
+        .backup-group {
+            display: flex;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+<div class="container">
+    <div class="header-flex">
+        <h2>💰 บัญชี Pro</h2>
+        <button class="theme-btn" onclick="toggleTheme()">🌓 สลับโหมด</button>
+    </div>
+    
+    <!-- เลือกเดือน & ตั้งงบประมาณ -->
+    <div class="section-box">
+        <label for="month-filter">📅 ดูข้อมูลเดือน:</label>
+        <select id="month-filter" onchange="updateUI()"></select>
+        
+        <label for="monthly-budget" style="margin-top: 8px;">🎯 ตั้งงบรายจ่ายเดือนนี้ (บาท):</label>
+        <input type="number" id="monthly-budget" placeholder="เช่น 10000" oninput="saveBudget()">
+        <div id="budget-status" class="budget-alert"></div>
+    </div>
+
+    <!-- สรุปยอดเงิน -->
+    <div class="summary">
+        <div>
+            <h3>รายรับ</h3>
+            <p id="total-income" class="income">0.00</p>
+        </div>
+        <div>
+            <h3>รายจ่าย</h3>
+            <p id="total-expense" class="expense">0.00</p>
+        </div>
+        <div>
+            <h3>คงเหลือ</h3>
+            <p id="net-balance" class="balance">0.00</p>
+        </div>
+    </div>
+
+    <!-- กราฟแสดงสัดส่วนรายจ่าย -->
+    <div class="chart-container">
+        <canvas id="expenseChart"></canvas>
+    </div>
+
+    <!-- ฟอร์มกรอกข้อมูล -->
+    <form id="transaction-form" class="section-box">
+        <label>✍️ เพิ่มรายการใหม่:</label>
+        <select id="type">
+            <option value="รายรับ">📥 รายรับ</option>
+            <option value="รายจ่าย">📤 รายจ่าย</option>
+        </select>
+        
+        <input type="number" id="amount" placeholder="จำนวนเงิน (บาท)" required step="any">
+        
+        <!-- หมวดหมู่ด่วน -->
+        <label style="margin-top: 6px;">🏷️ หมวดหมู่:</label>
+        <div class="quick-buttons">
+            <button type="button" onclick="setCategory('🍜 อาหาร')">🍜 อาหาร</button>
+            <button type="button" onclick="setCategory('🚗 เดินทาง')">🚗 เดินทาง</button>
+            <button type="button" onclick="setCategory('🛍️ ช้อปปิ้ง')">🛍️ ช้อปปิ้ง</button>
+            <button type="button" onclick="setCategory('💵 เงินเดือน')">💵 เงินเดือน</button>
+        </div>
+        <input type="text" id="category" placeholder="หรือพิมพ์หมวดหมู่เอง..." required>
+        
+        <input type="text" id="description" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)">
+        
+        <!-- ส่วนเลือกวันที่ด่วน -->
+        <label style="margin-top: 6px;">📅 วันที่:</label>
+        <div class="quick-buttons">
+            <button type="button" onclick="setDate(0)">⚡ วันนี้</button>
+            <button type="button" onclick="changeDate(-1)">◀️ ถอยหลัง 1 วัน</button>
+            <button type="button" onclick="changeDate(1)">▶️ เดินหน้า 1 วัน</button>
+        </div>
+        <input type="date" id="date" required>
+
+        <button type="submit" class="btn-success" style="margin-top: 10px;">➕ บันทึกรายการ</button>
+    </form>
+
+    <!-- ช่องค้นหาประวัติ -->
+    <div class="section-box" style="padding: 8px; margin-bottom: 8px;">
+        <input type="text" id="search-input" placeholder="🔍 ค้นหาประวัติ (เช่น กาแฟ, อาหาร)..." oninput="updateUI()" style="margin: 0;">
+    </div>
+
+    <!-- ประวัติรายการ -->
+    <h3 style="font-size: 15px; margin-bottom: 5px;">📜 ประวัติรายการ</h3>
+    <ul id="transaction-list"></ul>
+
+    <!-- ปุ่มสำรองข้อมูลและล้างข้อมูล -->
+    <div style="margin-top: 15px;">
+        <div class="backup-group">
+            <button class="btn-warning" onclick="exportData()">💾 สำรองข้อมูล</button>
+            <button class="btn-info" onclick="exportToCSV()">📊 โหลด Excel</button>
+        </div>
+        <div class="backup-group" style="margin-top: 5px;">
+            <button class="btn-warning" onclick="document.getElementById('import-file').click()">📂 กู้คืนข้อมูล</button>
+            <button class="btn-danger" onclick="clearAllData()">🗑️ ล้างทั้งหมด</button>
+            <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+        </div>
+    </div>
+</div>
+
+<script>
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    let budgets = JSON.parse(localStorage.getItem('budgets')) || {};
+
+    // ธีมมืด/สว่าง
+    function toggleTheme() {
+        const body = document.body;
+        const currentTheme = body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateUI(); // รีเฟรชสีของกราฟให้เข้ากับธีม
+    }
+
+    // โหลดธีมที่เคยบันทึกไว้
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', savedTheme);
+
+    function setCategory(cat) {
+        document.getElementById('category').value = cat;
+    }
+
+    function setDate(daysAgo) {
+        const d = new Date();
+        d.setDate(d.getDate() - daysAgo);
+        document.getElementById('date').value = d.toISOString().substring(0, 10);
+    }
+
+    function changeDate(days) {
+        const dateInput = document.getElementById('date');
+        let currentDate = dateInput.value ? new Date(dateInput.value) : new Date();
+        currentDate.setDate(currentDate.getDate() + days);
+        dateInput.value = currentDate.toISOString().substring(0, 10);
+    }
+
+    setDate(0);
+
+    const form = document.getElementById('transaction-form');
+    const typeInput = document.getElementById('type');
+    const amountInput = document.getElementById('amount');
+    const categoryInput = document.getElementById('category');
+    const descInput = document.getElementById('description');
+    const dateInput = document.getElementById('date');
+    const searchInput = document.getElementById('search-input');
+    const listElement = document.getElementById('transaction-list');
+    const totalIncomeEl = document.getElementById('total-income');
+    const totalExpenseEl = document.getElementById('total-expense');
+    const netBalanceEl = document.getElementById('net-balance');
+    const monthFilterEl = document.getElementById('month-filter');
+    const budgetInput = document.getElementById('monthly-budget');
+    const budgetStatusEl = document.getElementById('budget-status');
+
+    let expenseChart = null;
+
+    function updateMonthDropdown() {
+        const months = new Set();
+        transactions.forEach(t => {
+            if(t.date) months.add(t.date.substring(0, 7));
+        });
+        const currentYearMonth = new Date().toISOString().substring(0, 7);
+        months.add(currentYearMonth);
+
+        const sortedMonths = Array.from(months).sort().reverse();
+        const currentSelected = monthFilterEl.value || currentYearMonth;
+        monthFilterEl.innerHTML = '';
+
+        sortedMonths.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m;
+            option.textContent = formatMonthLabel(m);
+            monthFilterEl.appendChild(option);
+        });
+
+        if (sortedMonths.includes(currentSelected)) {
+            monthFilterEl.value = currentSelected;
+        }
+    }
+
+    function formatMonthLabel(yearMonth) {
+        const [year, month] = yearMonth.split('-');
+        const thaiMonths = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        return `${thaiMonths[parseInt(month)]} ${parseInt(year) + 543}`;
+    }
+
+    function saveBudget() {
+        const selectedMonth = monthFilterEl.value;
+        budgets[selectedMonth] = parseFloat(budgetInput.value) || 0;
+        localStorage.setItem('budgets', JSON.stringify(budgets));
+        updateBudgetStatus();
+    }
+
+    function updateBudgetStatus(totalExpense = 0) {
+        const selectedMonth = monthFilterEl.value;
+        const limit = budgets[selectedMonth] || 0;
+        budgetInput.value = limit > 0 ? limit : '';
+
+        if (limit > 0) {
+            const diff = limit - totalExpense;
+            if (diff >= 0) {
+                budgetStatusEl.style.color = '#27ae60';
+                budgetStatusEl.textContent = `🟢 เหลือใช้อีก ${diff.toLocaleString()} บาท (งบ ${limit.toLocaleString()} บ.)`;
+            } else {
+                budgetStatusEl.style.color = '#e74c3c';
+                budgetStatusEl.textContent = `🔴 เกินงบไปแล้ว ${Math.abs(diff).toLocaleString()} บาท!`;
+            }
+        } else {
+            budgetStatusEl.textContent = '';
+        }
+    }
+
+    function updateUI() {
+        updateMonthDropdown();
+        const selectedMonth = monthFilterEl.value;
+        const searchQuery = searchInput.value.toLowerCase();
+        
+        listElement.innerHTML = '';
+        let totalIncome = 0;
+        let totalExpense = 0;
+        let categoryMap = {};
+
+        // กรองตามเดือน และตัวอักษรค้นหา
+        const filteredTransactions = transactions.filter(t => {
+            const matchMonth = t.date && t.date.startsWith(selectedMonth);
+            const matchSearch = (t.category + ' ' + (t.desc || '') + ' ' + t.amount).toLowerCase().includes(searchQuery);
+            return matchMonth && matchSearch;
+        });
+
+        filteredTransactions.forEach((t) => {
+            const originalIndex = transactions.indexOf(t);
+
+            if (t.type === 'รายรับ') {
+                totalIncome += t.amount;
+            } else {
+                totalExpense += t.amount;
+                categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount;
+            }
+
+            const li = document.createElement('li');
+            li.className = t.type;
+            li.innerHTML = `
+                <div>
+                    <strong>[${t.type}] ${t.category}</strong> ${t.desc ? '('+t.desc+')' : ''}<br>
+                    <span class="date-text">📅 ${t.date}</span><br>
+                    <span style="color:${t.type === 'รายรับ' ? '#27ae60' : '#e74c3c'}; font-weight:bold;">
+                        ${t.amount.toLocaleString()} บาท
+                    </span>
+                </div>
+                <button class="delete-btn" onclick="deleteTransaction(${originalIndex})">❌ ลบ</button>
+            `;
+            listElement.appendChild(li);
+        });
+
+        const balance = totalIncome - totalExpense;
+        totalIncomeEl.textContent = totalIncome.toLocaleString() + ' ฿';
+        totalExpenseEl.textContent = totalExpense.toLocaleString() + ' ฿';
+        netBalanceEl.textContent = balance.toLocaleString() + ' ฿';
+
+        updateBudgetStatus(totalExpense);
+        updateChart(categoryMap);
+
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+
+    function updateChart(categoryMap) {
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        const labels = Object.keys(categoryMap);
+        const data = Object.values(categoryMap);
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+
+        if (expenseChart) {
+            expenseChart.destroy();
+        }
+
+        expenseChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels.length > 0 ? labels : ['ยังไม่มีรายจ่าย'],
+                datasets: [{
+                    data: data.length > 0 ? data : [1],
+                    backgroundColor: data.length > 0 ? ['#e74c3c', '#3498db', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22'] : [isDark ? '#333' : '#ecf0f1']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        position: 'right', 
+                        labels: { 
+                            boxWidth: 12, 
+                            font: { size: 11 },
+                            color: isDark ? '#e0e0e0' : '#333'
+                        } 
+                    }
+                }
+            }
+        });
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const newTransaction = {
+            type: typeInput.value,
+            amount: parseFloat(amountInput.value),
+            category: categoryInput.value,
+            desc: descInput.value,
+            date: dateInput.value
+        };
+
+        transactions.push(newTransaction);
+        monthFilterEl.value = newTransaction.date.substring(0, 7);
+        updateUI();
+        
+        amountInput.value = '';
+        categoryInput.value = '';
+        descInput.value = '';
+        setDate(0);
+    });
+
+    function deleteTransaction(index) {
+        if(confirm("คุณต้องการลบรายการนี้ใช่หรือไม่?")) {
+            transactions.splice(index, 1);
+            updateUI();
+        }
+    }
+
+    function clearAllData() {
+        if(confirm("⚠️ คำเตือน: ข้อมูลทั้งหมดจะถูกลบ ต้องการลบจริงหรือไม่?")) {
+            transactions = [];
+            budgets = {};
+            localStorage.removeItem('transactions');
+            localStorage.removeItem('budgets');
+            updateUI();
+        }
+    }
+
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({transactions, budgets}));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "my_expense_backup.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function exportToCSV() {
+        let csvContent = "\uFEFFประเภท,จำนวนเงิน,หมวดหมู่,รายละเอียด,วันที่\n";
+        transactions.forEach(t => {
+            csvContent += `"${t.type}",${t.amount},"${t.category}","${t.desc || ''}","${t.date}"\n`;
+        });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", url);
+        downloadAnchor.setAttribute("download", "my_expense_report.csv");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                if (parsed.transactions) {
+                    transactions = parsed.transactions;
+                    budgets = parsed.budgets || {};
+                    localStorage.setItem('transactions', JSON.stringify(transactions));
+                    localStorage.setItem('budgets', JSON.stringify(budgets));
+                    updateUI();
+                    alert("✅ กู้คืนข้อมูลสำเร็จ!");
+                } else {
+                    alert("❌ รูปแบบไฟล์ไม่ถูกต้อง");
+                }
+            } catch (err) {
+                alert("❌ เกิดข้อผิดพลาดในการอ่านไฟล์");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    updateUI();
+</script>
+
+</body>
+</html>
