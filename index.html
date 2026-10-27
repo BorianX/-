@@ -367,10 +367,10 @@
             
             <div style="display: flex; gap: 5px;">
                 <select id="note-tag" style="flex: 1;">
-                    <option value=" Shopping">🛍️ Shopping</option>
-                    <option value=" Idea">💡 Idea</option>
-                    <option value=" Work">💼 Work</option>
-                    <option value=" Personal">👤 Personal</option>
+                    <option value="🛍️ Shopping">🛍️ Shopping</option>
+                    <option value="💡 Idea">💡 Idea</option>
+                    <option value="💼 Work">💼 Work</option>
+                    <option value="👤 Personal">👤 Personal</option>
                 </select>
                 <button type="submit" class="btn-success" style="flex: 1; margin: 5px 0;">📌 บันทึกโน้ต</button>
             </div>
@@ -379,8 +379,8 @@
         <!-- กรองแท็กโน้ต -->
         <div class="quick-buttons" style="margin-bottom: 10px;">
             <button type="button" onclick="filterNotes('ALL')">ทั้งหมด</button>
-            <button type="button" onclick="filterNotes(' Shopping')">🛍️ Shopping</button>
-            <button type="button" onclick="filterNotes(' Idea')">💡 Idea</button>
+            <button type="button" onclick="filterNotes('🛍️ Shopping')">🛍️ Shopping</button>
+            <button type="button" onclick="filterNotes('💡 Idea')">💡 Idea</button>
             <button type="button" onclick="filterNotes('PINNED')">⭐ ปักหมุด</button>
         </div>
 
@@ -556,20 +556,48 @@
 
     function updateChart(categoryMap, totalIncome) {
         const ctx = document.getElementById('expenseChart').getContext('2d');
-        const labels = ['รายรับ', ...Object.keys(categoryMap)];
-        const data = [totalIncome, ...Object.values(categoryMap)];
-        const colors = ['#27ae60', '#e74c3c', '#3498db', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22'];
+        const expenseCategories = Object.keys(categoryMap);
+        const expenseData = Object.values(categoryMap);
         const isDark = document.body.getAttribute('data-theme') === 'dark';
+
+        // ชุดสีแดงหลายๆ เฉด เพื่อแยกแต่ละหมวดหมู่รายจ่ายให้เห็นเป็นขอบแยกกัน แต่คุมโทนสีแดงทั้งหมด
+        const redShades = [
+            '#e74c3c', // แดงหลัก
+            '#c0392b', // แดงเข้ม
+            '#ff6b6b', // แดงพาสเทลสว่าง
+            '#d63031', // แดงเข้มสด
+            '#ff4757', // แดงอมชมพูสด
+            '#b2bec3', 
+            '#e84118'
+        ];
+
+        let labels = [];
+        let data = [];
+        let colors = [];
+
+        // เพิ่ม "รายรับ" เป็นสีเขียว
+        if (totalIncome > 0) {
+            labels.push('รายรับ');
+            data.push(totalIncome);
+            colors.push('#27ae60'); // สีเขียวสำหรับรายรับ
+        }
+
+        // เพิ่มหมวดหมู่ "รายจ่าย" แต่ละหมวด เป็นเฉดสีแดงทั้งหมด
+        expenseCategories.forEach((cat, index) => {
+            labels.push(cat);
+            data.push(categoryMap[cat]);
+            colors.push(redShades[index % redShades.length]); // ใช้สีแดงวนลูปตามจำนวนหมวดหมู่
+        });
 
         if (expenseChart) expenseChart.destroy();
 
         expenseChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: labels.reduce((a, b) => a + b, 0) > 0 || totalIncome > 0 ? labels : ['ยังไม่มีข้อมูล'],
+                labels: labels.length > 0 ? labels : ['ยังไม่มีข้อมูล'],
                 datasets: [{
-                    data: data.reduce((a, b) => a + b, 0) > 0 ? data : [1],
-                    backgroundColor: colors.slice(0, labels.length)
+                    data: data.length > 0 ? data : [1],
+                    backgroundColor: colors.length > 0 ? colors : [isDark ? '#333' : '#ecf0f1']
                 }]
             },
             options: {
@@ -671,9 +699,7 @@
         }
     }
 
-    // ⭐ ฟีเจอร์เชื่อมโยง: แปลงโน้ตเป็นรายการรายจ่ายในแอปการเงิน
     function convertToExpense(title, content) {
-        // ค้นหาตัวเลขในข้อความ หรือให้ผู้ใช้นำไปใช้
         const numbers = (title + ' ' + content).match(/\d+/g);
         let defaultAmount = numbers ? numbers[0] : '';
         
@@ -691,7 +717,6 @@
             localStorage.setItem('transactions', JSON.stringify(transactions));
             alert(`✅ บันทึก "${title}" เป็นรายจ่ายจำนวน ${amount} บาท เรียบร้อยแล้ว!`);
             
-            // สลับกลับมาหน้า บัญชีรายรับ-รายจ่าย อัตโนมัติ
             document.querySelectorAll('.nav-btn')[0].click();
         }
     }
