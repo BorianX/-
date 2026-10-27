@@ -69,6 +69,7 @@
             padding: 4px;
             border-radius: 10px;
             border: 1px solid var(--box-border);
+            overflow-x: auto;
         }
         .nav-btn {
             flex: 1;
@@ -82,6 +83,7 @@
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
+            white-space: nowrap;
         }
         .nav-btn.active {
             background: var(--container-bg);
@@ -216,12 +218,7 @@
             text-align: center;
             margin-top: 10px;
         }
-        .cal-day-name {
-            font-size: 11px;
-            font-weight: bold;
-            color: #888;
-            padding: 4px 0;
-        }
+        .cal-day-name { font-size: 11px; font-weight: bold; color: #888; padding: 4px 0; }
         .cal-cell {
             background: var(--box-bg);
             border: 1px solid var(--box-border);
@@ -234,45 +231,25 @@
             flex-direction: column;
             justify-content: space-between;
         }
-        .cal-cell.today {
-            border: 2px solid var(--accent-color);
-            font-weight: bold;
-        }
-        .cal-dots {
-            display: flex;
-            justify-content: center;
-            gap: 2px;
-            margin-top: 2px;
-        }
-        .dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-        }
+        .cal-cell.today { border: 2px solid var(--accent-color); font-weight: bold; }
+        .cal-dots { display: flex; justify-content: center; gap: 2px; margin-top: 2px; }
+        .dot { width: 5px; height: 5px; border-radius: 50%; }
         .dot-inc { background: #27ae60; }
         .dot-exp { background: #e74c3c; }
 
-        /* Timeline & Note Styles */
-        .running-bal {
-            font-size: 11px;
-            color: var(--accent-color);
-            font-weight: bold;
-        }
-        .note-card {
+        /* Timeline & Card Styles */
+        .running-bal { font-size: 11px; color: var(--accent-color); font-weight: bold; }
+        .card-item {
             background: var(--li-bg);
             border: 1px solid var(--box-border);
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 8px;
-            position: relative;
         }
-        .note-card.pinned { border-left: 4px solid #f1c40f; }
-        .note-header { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 5px; }
-        .note-title { font-weight: bold; font-size: 14px; margin-bottom: 4px; }
-        .note-content { font-size: 13px; white-space: pre-wrap; margin-bottom: 8px; }
-        .note-footer { display: flex; justify-content: space-between; align-items: center; }
-        .tag-badge { font-size: 10px; background: var(--quick-btn-bg); color: var(--quick-btn-text); padding: 2px 6px; border-radius: 4px; }
-        
+        .card-header { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 5px; }
+        .card-title { font-weight: bold; font-size: 14px; margin-bottom: 4px; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
@@ -289,7 +266,8 @@
     <div class="nav-tabs">
         <button class="nav-btn active" onclick="switchTab('finance')">💰 บัญชี</button>
         <button class="nav-btn" onclick="switchTab('calendar')">📅 ปฏิทิน</button>
-        <button class="nav-btn" onclick="switchTab('recurring')">🔔 รายการประจำ</button>
+        <button class="nav-btn" onclick="switchTab('calc')">📈 ดอกเบี้ยทบต้น</button>
+        <button class="nav-btn" onclick="switchTab('wishlist')">🛍️ อยากได้ vs จำเป็น</button>
         <button class="nav-btn" onclick="switchTab('notes')">💡 โน้ต</button>
     </div>
     
@@ -340,7 +318,6 @@
                 <button type="button" onclick="setCategory('💵 เงินเดือน')">💵 เงินเดือน</button>
             </div>
             <input type="text" id="category" placeholder="หรือพิมพ์หมวดหมู่เอง..." required>
-            
             <input type="text" id="description" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)">
             
             <label style="margin-top: 6px;">📅 วันที่:</label>
@@ -394,35 +371,68 @@
         </div>
     </div>
 
-    <!-- ==================== TAB 3: รายการประจำ (Recurring Bills/Income) ==================== -->
-    <div id="tab-recurring" class="tab-content">
+    <!-- ==================== TAB 3: ดอกเบี้ยทบต้น (Compound Calc) ==================== -->
+    <div id="tab-calc" class="tab-content">
         <div class="section-box">
-            <button class="btn-info" onclick="applyRecurringForCurrentMonth()">⚡ ดึงรายการประจำเข้าเดือนนี้อัตโนมัติ</button>
+            <label>💰 เงินออมเริ่มต้น (บาท):</label>
+            <input type="number" id="calc-init" value="10000">
+            
+            <label>📥 ออมเพิ่มทุกเดือน (บาท):</label>
+            <input type="number" id="calc-monthly" value="3000">
+
+            <label>⏳ ระยะเวลา (ปี):</label>
+            <input type="number" id="calc-years" value="10">
+
+            <label>📈 ผลตอบแทนคาดหวัง (% ต่อปี):</label>
+            <div class="quick-buttons">
+                <button type="button" onclick="setRate(2.5)">2.5% (เงินฝาก)</button>
+                <button type="button" onclick="setRate(5.0)">5.0% (กองทุน)</button>
+                <button type="button" onclick="setRate(8.0)">8.0% (หุ้น S&P500)</button>
+            </div>
+            <input type="number" id="calc-rate" value="8.0" step="0.1">
+
+            <button class="btn-success" onclick="calculateCompound()" style="margin-top:8px;">🧮 คำนวณจำลองอนาคต</button>
         </div>
 
-        <form id="recurring-form" class="section-box">
-            <label>🔔 เพิ่มรายการประจำใหม่:</label>
-            <select id="rec-type">
-                <option value="รายรับ">📥 รายรับ (เช่น เงินเดือน)</option>
-                <option value="รายจ่าย" selected>📤 รายจ่าย (เช่น ค่าเน็ต, Netflix)</option>
-            </select>
-            <input type="text" id="rec-category" placeholder="หมวดหมู่ (เช่น 💵 เงินเดือน, 📶 ค่าเน็ต)" required>
-            <input type="number" id="rec-amount" placeholder="จำนวนเงิน (บาท)" required step="any">
-            <label>📅 ทุกๆ วันที่ของเดือน (1 - 31):</label>
-            <input type="number" id="rec-day" min="1" max="31" placeholder="เช่น 25" required>
-            <button type="submit" class="btn-success" style="margin-top: 5px;">➕ บันทึกรายการประจำ</button>
-        </form>
-
-        <h3 style="font-size: 15px; margin-bottom: 5px;">📜 รายการประจำทั้งหมด</h3>
-        <ul id="recurring-list"></ul>
+        <div id="calc-result" class="section-box" style="display:none; text-align:center;">
+            <h3 style="margin:0; font-size:14px; color:#888;">คาดการณ์ยอดเงินในอนาคต</h3>
+            <h1 id="calc-total" style="color:#27ae60; margin:5px 0;">0 ฿</h1>
+            <div style="font-size:12px; color:#666; display:flex; justify-content:space-around; margin-top:10px;">
+                <div>เงินต้นรวม: <br><strong id="calc-principal" style="color:var(--text-color);">0 ฿</strong></div>
+                <div>ดอกเบี้ย/กำไรทบต้น: <br><strong id="calc-interest" style="color:#3498db;">0 ฿</strong></div>
+            </div>
+        </div>
     </div>
 
-    <!-- ==================== TAB 4: โน้ต & ไอเดีย ==================== -->
+    <!-- ==================== TAB 4: Wishlist (อยากได้ vs จำเป็น) ==================== -->
+    <div id="tab-wishlist" class="tab-content">
+        <form id="wishlist-form" class="section-box">
+            <label>🛍️ เพิ่มของที่อยากได้ (ดักความอยาก 3 วัน):</label>
+            <input type="text" id="wish-title" placeholder="ชื่อสินค้า..." required>
+            <input type="number" id="wish-price" placeholder="ราคา (บาท)" required>
+            
+            <label>⭐ ระดับความจำเป็น (1 = อยากได้เฉยๆ, 5 = จำเป็นมาก):</label>
+            <select id="wish-rating">
+                <option value="1">⭐ (1/5) กิเลสล้วนๆ</option>
+                <option value="2">⭐⭐ (2/5) อยากได้ แต่รอได้</option>
+                <option value="3" selected>⭐⭐⭐ (3/5) มีประโยชน์ แต่ไม่รีบ</option>
+                <option value="4">⭐⭐⭐⭐ (4/5) ค่อนข้างจำเป็น</option>
+                <option value="5">⭐⭐⭐⭐⭐ (5/5) จำเป็นมาก ต้องใช้</option>
+            </select>
+
+            <button type="submit" class="btn-success" style="margin-top:5px;">⏳ เพิ่มเข้ารายการรอ 3 วัน</button>
+        </form>
+
+        <h3 style="font-size: 15px; margin-bottom: 5px;">🛍️ รายการของที่กำลังชั่งใจ</h3>
+        <div id="wishlist-container"></div>
+    </div>
+
+    <!-- ==================== TAB 5: โน้ต & ไอเดีย ==================== -->
     <div id="tab-notes" class="tab-content">
         <form id="note-form" class="section-box">
             <label>💡 จดโน้ต / ไอเดียใหม่:</label>
             <input type="text" id="note-title" placeholder="หัวข้อโน้ต..." required>
-            <textarea id="note-content" rows="3" placeholder="รายละเอียด... (ถ้ามีจำนวนเงินจะแปลงเป็นรายจ่ายได้ง่ายขึ้น)"></textarea>
+            <textarea id="note-content" rows="3" placeholder="รายละเอียด..."></textarea>
             <div style="display: flex; gap: 5px;">
                 <select id="note-tag" style="flex: 1;">
                     <option value="🛍️ Shopping">🛍️ Shopping</option>
@@ -450,11 +460,10 @@
     let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
     let budgets = JSON.parse(localStorage.getItem('budgets')) || {};
     let notes = JSON.parse(localStorage.getItem('notes')) || [];
-    let recurrings = JSON.parse(localStorage.getItem('recurrings')) || [];
+    let wishlists = JSON.parse(localStorage.getItem('wishlists')) || [];
     let activeNoteFilter = 'ALL';
     let currentCalDate = new Date();
 
-    // ธีมมืด/สว่าง
     function toggleTheme() {
         const body = document.body;
         const currentTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
@@ -465,7 +474,6 @@
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.body.setAttribute('data-theme', savedTheme);
 
-    // สลับแท็บหน้า
     function switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -479,9 +487,11 @@
         } else if(tabName === 'calendar') {
             document.getElementById('tab-calendar').classList.add('active');
             renderCalendar();
-        } else if(tabName === 'recurring') {
-            document.getElementById('tab-recurring').classList.add('active');
-            renderRecurrings();
+        } else if(tabName === 'calc') {
+            document.getElementById('tab-calc').classList.add('active');
+        } else if(tabName === 'wishlist') {
+            document.getElementById('tab-wishlist').classList.add('active');
+            renderWishlist();
         } else {
             document.getElementById('tab-notes').classList.add('active');
             renderNotes();
@@ -578,7 +588,6 @@
         let totalExpense = 0;
         let categoryMap = {};
 
-        // คัดกรองและเรียงลำดับรายการตามวันที่จากอดีตไปปัจจุบันเพื่อคิด ยอดเงินคงเหลือสะสม (Running Balance)
         const filteredTransactions = transactions.filter(t => {
             const matchMonth = t.date && t.date.startsWith(selectedMonth);
             const matchSearch = (t.category + ' ' + (t.desc || '') + ' ' + t.amount).toLowerCase().includes(searchQuery);
@@ -603,14 +612,14 @@
             li.innerHTML = `
                 <div>
                     <strong>[${t.type}] ${t.category}</strong> ${t.desc ? '('+t.desc+')' : ''}<br>
-                    <span class="date-text">📅 ${t.date}</span> | <span class="running-bal">คงเหลือสะสม: ${runningBalance.toLocaleString()} ฿</span><br>
+                    <span class="date-text">📅 ${t.date}</span> | <span class="running-bal">สะสม: ${runningBalance.toLocaleString()} ฿</span><br>
                     <span style="color:${t.type === 'รายรับ' ? '#27ae60' : '#e74c3c'}; font-weight:bold;">
                         ${t.amount.toLocaleString()} บาท
                     </span>
                 </div>
                 <button class="icon-btn" onclick="deleteTransaction(${originalIndex})">❌</button>
             `;
-            listElement.prepend(li); // แสดงรายการล่าสุดอยู่บนสุด
+            listElement.prepend(li);
         });
 
         const balance = totalIncome - totalExpense;
@@ -741,7 +750,7 @@
         const listEl = document.getElementById('cal-selected-list');
         
         detailsBox.style.display = 'block';
-        titleEl.innerHTML = `📅 รายการวันที่ ${dateStr} <button class="icon-btn" onclick="quickAddOnDate('${dateStr}')">➕ เพิ่มรายการ</button>`;
+        titleEl.innerHTML = `📅 รายการวันที่ ${dateStr}`;
         listEl.innerHTML = '';
 
         if(dayTx.length === 0) {
@@ -753,93 +762,124 @@
             const li = document.createElement('li');
             li.className = t.type;
             li.innerHTML = `
-                <span>[${t.type}] ${t.category} ${t.desc ? '('+t.desc+')' : ''}</span>
+                <span>[${t.type}] ${t.category}</span>
                 <strong style="color:${t.type==='รายรับ'?'#27ae60':'#e74c3c'}">${t.amount.toLocaleString()} ฿</strong>
             `;
             listEl.appendChild(li);
         });
     }
 
-    function quickAddOnDate(dateStr) {
-        document.getElementById('date').value = dateStr;
-        document.querySelectorAll('.nav-btn')[0].click();
+    // ==================== COMPOUND INTEREST CALCULATOR ====================
+    function setRate(val) { document.getElementById('calc-rate').value = val; }
+    function calculateCompound() {
+        const P = parseFloat(document.getElementById('calc-init').value) || 0;
+        const PMT = parseFloat(document.getElementById('calc-monthly').value) || 0;
+        const years = parseFloat(document.getElementById('calc-years').value) || 0;
+        const annualRate = (parseFloat(document.getElementById('calc-rate').value) || 0) / 100;
+
+        const months = years * 12;
+        const r = annualRate / 12;
+
+        let total = P * Math.pow(1 + r, months);
+        if (r > 0) {
+            total += PMT * ((Math.pow(1 + r, months) - 1) / r);
+        } else {
+            total += PMT * months;
+        }
+
+        const totalPrincipal = P + (PMT * months);
+        const totalInterest = total - totalPrincipal;
+
+        document.getElementById('calc-result').style.display = 'block';
+        document.getElementById('calc-total').textContent = Math.round(total).toLocaleString() + ' ฿';
+        document.getElementById('calc-principal').textContent = Math.round(totalPrincipal).toLocaleString() + ' ฿';
+        document.getElementById('calc-interest').textContent = Math.round(totalInterest).toLocaleString() + ' ฿';
     }
 
-    // ==================== RECURRING FEATURE ====================
-    const recForm = document.getElementById('recurring-form');
-    recForm.addEventListener('submit', function(e) {
+    // ==================== WISHLIST FEATURE (3-DAY RULE) ====================
+    const wishForm = document.getElementById('wishlist-form');
+    wishForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        recurrings.push({
+        const createdDate = new Date();
+        const unlockDate = new Date();
+        unlockDate.setDate(createdDate.getDate() + 3);
+
+        wishlists.unshift({
             id: Date.now(),
-            type: document.getElementById('rec-type').value,
-            category: document.getElementById('rec-category').value,
-            amount: parseFloat(document.getElementById('rec-amount').value),
-            day: parseInt(document.getElementById('rec-day').value)
+            title: document.getElementById('wish-title').value,
+            price: parseFloat(document.getElementById('wish-price').value),
+            rating: document.getElementById('wish-rating').value,
+            createdDate: createdDate.toISOString().substring(0, 10),
+            unlockDate: unlockDate.toISOString().substring(0, 10)
         });
-        localStorage.setItem('recurrings', JSON.stringify(recurrings));
-        document.getElementById('rec-category').value = '';
-        document.getElementById('rec-amount').value = '';
-        document.getElementById('rec-day').value = '';
-        renderRecurrings();
+        localStorage.setItem('wishlists', JSON.stringify(wishlists));
+        document.getElementById('wish-title').value = '';
+        document.getElementById('wish-price').value = '';
+        renderWishlist();
     });
 
-    function renderRecurrings() {
-        const listEl = document.getElementById('recurring-list');
-        listEl.innerHTML = '';
-        if(recurrings.length === 0) {
-            listEl.innerHTML = '<li style="color:#888;">ยังไม่มีรายการประจำ</li>';
+    function renderWishlist() {
+        const container = document.getElementById('wishlist-container');
+        container.innerHTML = '';
+
+        if(wishlists.length === 0) {
+            container.innerHTML = '<div style="color:#888; text-align:center; font-size:13px;">ไม่มีรายการที่กำลังชั่งใจ</div>';
             return;
         }
-        recurrings.forEach((r, index) => {
-            const li = document.createElement('li');
-            li.className = r.type;
-            li.innerHTML = `
-                <div>
-                    <strong>[ทุกวันที่ ${r.day}] ${r.category}</strong><br>
-                    <span style="color:${r.type==='รายรับ'?'#27ae60':'#e74c3c'}; font-weight:bold;">${r.amount.toLocaleString()} บาท</span>
+
+        const todayStr = new Date().toISOString().substring(0, 10);
+
+        wishlists.forEach((item) => {
+            const isUnlocked = todayStr >= item.unlockDate;
+            const stars = '⭐'.repeat(parseInt(item.rating));
+
+            const card = document.createElement('div');
+            card.className = 'card-item';
+            card.innerHTML = `
+                <div class="card-header">
+                    <span>สร้างเมื่อ: ${item.createdDate}</span>
+                    <span><sup>${stars}</sup></span>
                 </div>
-                <button class="icon-btn" onclick="deleteRecurring(${index})">❌</button>
+                <div class="card-title">${item.title}</div>
+                <div style="font-size:14px; color:#e74c3c; font-weight:bold;">${item.price.toLocaleString()} บาท</div>
+                <div class="card-footer">
+                    <span style="font-size:11px; color:${isUnlocked?'#27ae60':'#f39c12'};">
+                        ${isUnlocked ? '✅ ผ่าน 3 วันแล้ว! ซื้อได้เลย' : `⏳ ปลดล็อควันที่: ${item.unlockDate}`}
+                    </span>
+                    <div>
+                        <button class="icon-btn" onclick="buyWishItem(${item.id})" title="ย้ายไปรายจ่าย">💸 ซื้อเลย</button>
+                        <button class="icon-btn" onclick="deleteWishItem(${item.id})" title="ตัดใจลบทิ้ง">🗑️</button>
+                    </div>
+                </div>
             `;
-            listEl.appendChild(li);
+            container.appendChild(card);
         });
     }
 
-    function deleteRecurring(index) {
-        if(confirm("ต้องการลบรายการประจำนี้ใช่หรือไม่?")) {
-            recurrings.splice(index, 1);
-            localStorage.setItem('recurrings', JSON.stringify(recurrings));
-            renderRecurrings();
+    function buyWishItem(id) {
+        const item = wishlists.find(w => w.id === id);
+        if(item) {
+            const today = new Date().toISOString().substring(0, 10);
+            transactions.push({
+                type: 'รายจ่าย',
+                amount: item.price,
+                category: '🛍️ ช้อปปิ้ง',
+                desc: `[Wishlist] ${item.title}`,
+                date: today
+            });
+            wishlists = wishlists.filter(w => w.id !== id);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            localStorage.setItem('wishlists', JSON.stringify(wishlists));
+            alert(`✅ ย้าย "${item.title}" เป็นรายการรายจ่ายเรียบร้อย!`);
+            document.querySelectorAll('.nav-btn')[0].click();
         }
     }
 
-    function applyRecurringForCurrentMonth() {
-        const currentYearMonth = new Date().toISOString().substring(0, 7);
-        let addedCount = 0;
-        
-        recurrings.forEach(r => {
-            const targetDay = String(r.day).padStart(2, '0');
-            const targetDate = `${currentYearMonth}-${targetDay}`;
-            
-            // เช็คว่าเคยถูกเพิ่มไปหรือยังเพื่อไม่ให้ซ้ำ
-            const exists = transactions.some(t => t.date === targetDate && t.category === r.category && t.amount === r.amount);
-            if(!exists) {
-                transactions.push({
-                    type: r.type,
-                    amount: r.amount,
-                    category: r.category,
-                    desc: 'รายการประจำอัตโนมัติ',
-                    date: targetDate
-                });
-                addedCount++;
-            }
-        });
-
-        if(addedCount > 0) {
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-            alert(`✅ ดึงรายการประจำเข้าเดือนนี้สำเร็จ ${addedCount} รายการ!`);
-            document.querySelectorAll('.nav-btn')[0].click();
-        } else {
-            alert("ℹ️ รายการประจำของเดือนนี้ถูกบันทึกไว้ครบถ้วนแล้วครับ");
+    function deleteWishItem(id) {
+        if(confirm("ยินดีด้วยที่คุณตัดใจได้! ต้องการลบรายการนี้ใช่หรือไม่?")) {
+            wishlists = wishlists.filter(w => w.id !== id);
+            localStorage.setItem('wishlists', JSON.stringify(wishlists));
+            renderWishlist();
         }
     }
 
@@ -870,17 +910,17 @@
 
         filtered.forEach(note => {
             const card = document.createElement('div');
-            card.className = `note-card ${note.pinned ? 'pinned' : ''}`;
+            card.className = `card-item ${note.pinned ? 'pinned' : ''}`;
             card.innerHTML = `
-                <div class="note-header">
+                <div class="card-header">
                     <span class="tag-badge">${note.tag}</span>
                     <span>${note.date}</span>
                 </div>
-                <div class="note-title">${note.title}</div>
-                <div class="note-content">${note.content}</div>
-                <div class="note-footer">
+                <div class="card-title">${note.title}</div>
+                <div style="font-size:13px; white-space:pre-wrap; margin-bottom:8px;">${note.content}</div>
+                <div class="card-footer">
                     <div>
-                        <button class="icon-btn" onclick="togglePinNote(${note.id})" title="ปักหมุด">${note.pinned ? '⭐' : '☆'}</button>
+                        <button class="icon-btn" onclick="togglePinNote(${note.id})">${note.pinned ? '⭐' : '☆'}</button>
                         <button class="icon-btn" onclick="convertToExpense('${note.title}', '${note.content}')">💸 แปลงเป็นรายจ่าย</button>
                     </div>
                     <button class="icon-btn" onclick="deleteNote(${note.id})">🗑️</button>
@@ -924,13 +964,13 @@
     // ==================== BACKUP / IMPORT / EXPORT ====================
     function clearAllData() {
         if(confirm("⚠️ คำเตือน: ข้อมูลทั้งหมดจะถูกลบ ต้องการลบจริงหรือไม่?")) {
-            transactions = []; budgets = {}; notes = []; recurrings = [];
+            transactions = []; budgets = {}; notes = []; wishlists = [];
             localStorage.clear();
             updateUI();
         }
     }
     function exportData() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({transactions, budgets, notes, recurrings}));
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({transactions, budgets, notes, wishlists}));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
         downloadAnchor.setAttribute("download", "my_lifestyle_hub_backup.json");
@@ -959,11 +999,11 @@
                     transactions = parsed.transactions;
                     budgets = parsed.budgets || {};
                     notes = parsed.notes || [];
-                    recurrings = parsed.recurrings || [];
+                    wishlists = parsed.wishlists || [];
                     localStorage.setItem('transactions', JSON.stringify(transactions));
                     localStorage.setItem('budgets', JSON.stringify(budgets));
                     localStorage.setItem('notes', JSON.stringify(notes));
-                    localStorage.setItem('recurrings', JSON.stringify(recurrings));
+                    localStorage.setItem('wishlists', JSON.stringify(wishlists));
                     updateUI();
                     alert("✅ กู้คืนข้อมูลสำเร็จ!");
                 }
