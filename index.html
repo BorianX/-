@@ -74,7 +74,7 @@
         .nav-btn {
             flex: 1;
             padding: 8px 3px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
             border: none;
             background: none;
@@ -538,9 +538,10 @@
 
     function toggleTheme() {
         const body = document.body;
-        const currentTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        body.setAttribute('data-theme', currentTheme);
-        localStorage.setItem('theme', currentTheme);
+        const currentTheme = body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
         updateUI();
     }
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -627,7 +628,29 @@
     function formatMonthLabel(yearMonth) {
         const [year, month] = yearMonth.split('-');
         const thaiMonths = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-        return `${thaiMonths[parseInt(month)]} ${parseInt(year) + 543}`; }  function saveBudget() { const selectedMonth = monthFilterEl.value; budgets[selectedMonth] = parseFloat(budgetInput.value) \vert{}\vert{} 0; localStorage.setItem('budgets', JSON.stringify(budgets)); updateBudgetStatus(); }  function updateBudgetStatus(totalExpense = 0) { const selectedMonth = monthFilterEl.value; const limit = budgets[selectedMonth] \vert{}\vert{} 0; budgetInput.value = limit > 0 ? limit : '';  if (limit > 0) { const diff = limit - totalExpense; if (diff >= 0) { budgetStatusEl.style.color = '#27ae60'; budgetStatusEl.textContent = `🟢 เหลือใช้อีก ${diff.toLocaleString()} บาท (งบ ${limit.toLocaleString()} บ.)`; } else { budgetStatusEl.style.color = '#e74c3c'; budgetStatusEl.textContent = `🔴 เกินงบไปแล้ว ${Math.abs(diff).toLocaleString()} บาท!`;
+        return `${thaiMonths[parseInt(month)]} ${parseInt(year) + 543}`;
+    }
+
+    function saveBudget() {
+        const selectedMonth = monthFilterEl.value;
+        budgets[selectedMonth] = parseFloat(budgetInput.value) || 0;
+        localStorage.setItem('budgets', JSON.stringify(budgets));
+        updateBudgetStatus();
+    }
+
+    function updateBudgetStatus(totalExpense = 0) {
+        const selectedMonth = monthFilterEl.value;
+        const limit = budgets[selectedMonth] || 0;
+        budgetInput.value = limit > 0 ? limit : '';
+
+        if (limit > 0) {
+            const diff = limit - totalExpense;
+            if (diff >= 0) {
+                budgetStatusEl.style.color = '#27ae60';
+                budgetStatusEl.textContent = `🟢 เหลือใช้อีก ${diff.toLocaleString()} บาท (งบ ${limit.toLocaleString()} บ.)`;
+            } else {
+                budgetStatusEl.style.color = '#e74c3c';
+                budgetStatusEl.textContent = `🔴 เกินงบไปแล้ว ${Math.abs(diff).toLocaleString()} บาท!`;
             }
         } else { budgetStatusEl.textContent = ''; }
     }
@@ -665,7 +688,7 @@
             li.className = t.type;
             li.innerHTML = `
                 <div>
-                    <strong>[${t.type}] ${t.category}</strong>${t.desc ? '('+t.desc+')' : ''}<br>
+                    <strong>[${t.type}] ${t.category}</strong> ${t.desc ? '('+t.desc+')' : ''}<br>
                     <span class="date-text">📅 ${t.date}</span> | <span class="running-bal">สะสม: ${runningBalance.toLocaleString()} ฿</span><br>
                     <span style="color:${t.type === 'รายรับ' ? '#27ae60' : '#e74c3c'}; font-weight:bold;">
                         ${t.amount.toLocaleString()} บาท
@@ -773,7 +796,14 @@
         }
 
         for(let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`; const dayTx = transactions.filter(t => t.date === dateStr);  const hasInc = dayTx.some(t => t.type === 'รายรับ'); const hasExp = dayTx.some(t => t.type === 'รายจ่าย');  const cell = document.createElement('div'); cell.className = `cal-cell ${dateStr === todayStr ? 'today' : ''}`;
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayTx = transactions.filter(t => t.date === dateStr);
+            
+            const hasInc = dayTx.some(t => t.type === 'รายรับ');
+            const hasExp = dayTx.some(t => t.type === 'รายจ่าย');
+
+            const cell = document.createElement('div');
+            cell.className = `cal-cell ${dateStr === todayStr ? 'today' : ''}`;
             cell.onclick = () => selectCalDate(dateStr, dayTx);
             cell.innerHTML = `
                 <span>${day}</span>
@@ -809,7 +839,7 @@
             const li = document.createElement('li');
             li.className = t.type;
             li.innerHTML = `
-                <span>[${t.type}]${t.category}</span>
+                <span>[${t.type}] ${t.category}</span>
                 <strong style="color:${t.type==='รายรับ'?'#27ae60':'#e74c3c'}">${t.amount.toLocaleString()} ฿</strong>
             `;
             listEl.appendChild(li);
@@ -895,7 +925,6 @@
             displayEl.textContent = "ยังไม่มีเมนูในระบบ ลองเพิ่มดูก่อนครับ!";
             return;
         }
-        // เอฟเฟกต์สุ่มสนุกๆ
         let count = 0;
         const interval = setInterval(() => {
             const randomIndex = Math.floor(Math.random() * meals.length);
@@ -1009,7 +1038,53 @@
                     type: 'รายจ่าย',
                     amount: item.price,
                     category: '🛍️ ช้อปปิ้ง',
-                    desc: `[Wishlist] ${item.title}`, date: today }); wishlists = wishlists.filter(w => w.id !== id); localStorage.setItem('transactions', JSON.stringify(transactions)); localStorage.setItem('wishlists', JSON.stringify(wishlists)); document.querySelectorAll('.nav-btn')[0].click(); }); } }  function deleteWishItem(id) { showCustomConfirm("ยินดีด้วยที่คุณตัดใจได้! ต้องการลบรายการนี้ใช่หรือไม่?", function() { wishlists = wishlists.filter(w => w.id !== id); localStorage.setItem('wishlists', JSON.stringify(wishlists)); renderWishlist(); }); }  // ==================== NOTES FEATURE ==================== const noteForm = document.getElementById('note-form'); noteForm.addEventListener('submit', function(e) { e.preventDefault(); notes.unshift({ id: Date.now(), title: document.getElementById('note-title').value, content: document.getElementById('note-content').value, tag: document.getElementById('note-tag').value, pinned: false, date: new Date().toLocaleDateString('th-TH') }); localStorage.setItem('notes', JSON.stringify(notes)); document.getElementById('note-title').value = ''; document.getElementById('note-content').value = ''; renderNotes(); });  function renderNotes() { const notesListEl = document.getElementById('notes-list'); notesListEl.innerHTML = ''; let filtered = notes; if(activeNoteFilter === 'PINNED') filtered = notes.filter(n => n.pinned); else if(activeNoteFilter !== 'ALL') filtered = notes.filter(n => n.tag === activeNoteFilter);  filtered.forEach(note => { const card = document.createElement('div'); card.className = `card-item ${note.pinned ? 'pinned' : ''}`;
+                    desc: `[Wishlist] ${item.title}`,
+                    date: today
+                });
+                wishlists = wishlists.filter(w => w.id !== id);
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+                localStorage.setItem('wishlists', JSON.stringify(wishlists));
+                document.querySelectorAll('.nav-btn')[0].click();
+            });
+        }
+    }
+
+    function deleteWishItem(id) {
+        showCustomConfirm("ยินดีด้วยที่คุณตัดใจได้! ต้องการลบรายการนี้ใช่หรือไม่?", function() {
+            wishlists = wishlists.filter(w => w.id !== id);
+            localStorage.setItem('wishlists', JSON.stringify(wishlists));
+            renderWishlist();
+        });
+    }
+
+    // ==================== NOTES FEATURE ====================
+    const noteForm = document.getElementById('note-form');
+    noteForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        notes.unshift({
+            id: Date.now(),
+            title: document.getElementById('note-title').value,
+            content: document.getElementById('note-content').value,
+            tag: document.getElementById('note-tag').value,
+            pinned: false,
+            date: new Date().toLocaleDateString('th-TH')
+        });
+        localStorage.setItem('notes', JSON.stringify(notes));
+        document.getElementById('note-title').value = '';
+        document.getElementById('note-content').value = '';
+        renderNotes();
+    });
+
+    function renderNotes() {
+        const notesListEl = document.getElementById('notes-list');
+        notesListEl.innerHTML = '';
+        let filtered = notes;
+        if(activeNoteFilter === 'PINNED') filtered = notes.filter(n => n.pinned);
+        else if(activeNoteFilter !== 'ALL') filtered = notes.filter(n => n.tag === activeNoteFilter);
+
+        filtered.forEach(note => {
+            const card = document.createElement('div');
+            card.className = `card-item ${note.pinned ? 'pinned' : ''}`;
             card.innerHTML = `
                 <div class="card-header">
                     <span class="tag-badge">${note.tag}</span>
@@ -1044,7 +1119,15 @@
     function convertToExpense(title, content) {
         const numbers = (title + ' ' + content).match(/\d+/g);
         let defaultAmount = numbers ? numbers[0] : '';
-        let amount = prompt(`คุณต้องการเปลี่ยนโน้ต "${title}" เป็นรายการรายจ่ายใช่หรือไม่?\nโปรดใส่จำนวนเงิน (บาท):`, defaultAmount); if (amount && !isNaN(amount) && parseFloat(amount) > 0) { showCustomConfirm(`ยืนยันบันทึก "${title}" จำนวน ${amount} บาท เป็นรายจ่าย?`, function() { const today = new Date().toISOString().substring(0, 10); transactions.push({ type: 'รายจ่าย', amount: parseFloat(amount), category: '🛍️ ช้อปปิ้ง', desc: title + (content ? ` (${content})` : ''),
+        let amount = prompt(`คุณต้องการเปลี่ยนโน้ต "${title}" เป็นรายการรายจ่ายใช่หรือไม่?\nโปรดใส่จำนวนเงิน (บาท):`, defaultAmount);
+        if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+            showCustomConfirm(`ยืนยันบันทึก "${title}" จำนวน ${amount} บาท เป็นรายจ่าย?`, function() {
+                const today = new Date().toISOString().substring(0, 10);
+                transactions.push({
+                    type: 'รายจ่าย',
+                    amount: parseFloat(amount),
+                    category: '🛍️ ช้อปปิ้ง',
+                    desc: title + (content ? ` (${content})` : ''),
                     date: today
                 });
                 localStorage.setItem('transactions', JSON.stringify(transactions));
@@ -1071,4 +1154,43 @@
     }
     function exportToCSV() {
         let csvContent = "\uFEFFประเภท,จำนวนเงิน,หมวดหมู่,รายละเอียด,วันที่\n";
-        transactions.forEach(t => { csvContent += `"${t.type}",${t.
+        transactions.forEach(t => { csvContent += `"${t.type}",${t.amount},"${t.category}","${t.desc || ''}","${t.date}"\n`; });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", url);
+        downloadAnchor.setAttribute("download", "my_expense_report.csv");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click(); downloadAnchor.remove();
+    }
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                if (parsed.transactions) {
+                    transactions = parsed.transactions;
+                    budgets = parsed.budgets || {};
+                    notes = parsed.notes || [];
+                    wishlists = parsed.wishlists || [];
+                    meals = parsed.meals || meals;
+                    localStorage.setItem('transactions', JSON.stringify(transactions));
+                    localStorage.setItem('budgets', JSON.stringify(budgets));
+                    localStorage.setItem('notes', JSON.stringify(notes));
+                    localStorage.setItem('wishlists', JSON.stringify(wishlists));
+                    localStorage.setItem('meals', JSON.stringify(meals));
+                    updateUI();
+                    showCustomConfirm("✅ กู้คืนข้อมูลสำเร็จ!", function() {});
+                }
+            } catch (err) { alert("❌ เกิดข้อผิดพลาดในการอ่านไฟล์"); }
+        };
+        reader.readAsText(file);
+    }
+
+    updateUI();
+</script>
+
+</body>
+</html>
