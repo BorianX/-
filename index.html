@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกรายรับ-รายจ่าย Ultimate Pro</title>
-    <!-- โหลดไลบรารีวาดกราฟ Chart.js -->
+    <title>Lifestyle Hub Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -19,6 +18,7 @@
             --input-border: #bdc3c7;
             --quick-btn-bg: #e2e8f0;
             --quick-btn-text: #475569;
+            --accent-color: #3498db;
         }
 
         [data-theme="dark"] {
@@ -33,6 +33,7 @@
             --input-border: #444;
             --quick-btn-bg: #333;
             --quick-btn-text: #e0e0e0;
+            --accent-color: #3498db;
         }
 
         body {
@@ -50,7 +51,6 @@
             padding: 20px;
             border-radius: 14px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transition: background 0.3s;
         }
         .header-flex {
             display: flex;
@@ -58,8 +58,36 @@
             align-items: center;
             margin-bottom: 15px;
         }
-        h2 { margin: 0; color: #3498db; font-size: 20px; }
+        h2 { margin: 0; color: var(--accent-color); font-size: 20px; }
         
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            background: var(--box-bg);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--box-border);
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-btn.active {
+            background: var(--container-bg);
+            color: var(--accent-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
         .theme-btn {
             background: none;
             border: 1px solid var(--input-border);
@@ -103,7 +131,7 @@
             font-weight: bold;
         }
         
-        input, select, button {
+        input, select, textarea, button {
             width: 100%;
             padding: 10px;
             margin: 5px 0;
@@ -115,7 +143,7 @@
             font-size: 14px;
         }
         button {
-            background-color: #3498db;
+            background-color: var(--accent-color);
             color: white;
             border: none;
             font-weight: bold;
@@ -128,7 +156,6 @@
         .btn-warning { background-color: #f39c12; color: #fff; }
         .btn-info { background-color: #9b59b6; }
 
-        /* ปุ่มเลือกวันที่และหมวดหมู่ด่วน */
         .quick-buttons {
             display: flex;
             gap: 4px;
@@ -147,7 +174,7 @@
             border-radius: 4px;
         }
 
-        ul { list-style: none; padding: 0; max-height: 180px; overflow-y: auto; }
+        ul { list-style: none; padding: 0; max-height: 220px; overflow-y: auto; }
         li {
             display: flex;
             justify-content: space-between;
@@ -161,14 +188,15 @@
         }
         li.รายรับ { border-left-color: #27ae60; }
         li.รายจ่าย { border-left-color: #e74c3c; }
-        .delete-btn {
+        
+        .icon-btn {
             background: none;
             border: none;
-            color: #e74c3c;
             cursor: pointer;
             width: auto;
-            padding: 4px;
-            font-size: 12px;
+            padding: 4px 6px;
+            font-size: 13px;
+            margin: 0 2px;
         }
         .date-text { font-size: 11px; color: #888; }
         
@@ -181,107 +209,192 @@
             display: flex;
             gap: 5px;
         }
+
+        /* Styles สำหรับหน้า โน้ต */
+        .note-card {
+            background: var(--li-bg);
+            border: 1px solid var(--box-border);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .note-card.pinned {
+            border-left: 4px solid #f1c40f;
+        }
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        .note-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .note-content {
+            font-size: 13px;
+            white-space: pre-wrap;
+            margin-bottom: 8px;
+        }
+        .note-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tag-badge {
+            font-size: 10px;
+            background: var(--quick-btn-bg);
+            color: var(--quick-btn-text);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
 <body data-theme="light">
 
 <div class="container">
     <div class="header-flex">
-        <h2>💰 PocketS💸</h2>
+        <h2>💰 Lifestyle Hub</h2>
         <button class="theme-btn" onclick="toggleTheme()">🌓 สลับโหมด</button>
     </div>
+
+    <!-- ปุ่มสลับหน้า บัญชี vs โน้ต -->
+    <div class="nav-tabs">
+        <button class="nav-btn active" onclick="switchTab('finance')">💰 รายรับ-รายจ่าย</button>
+        <button class="nav-btn" onclick="switchTab('notes')">💡 โน้ต & ไอเดีย</button>
+    </div>
     
-    <!-- เลือกเดือน & ตั้งงบประมาณ -->
-    <div class="section-box">
-        <label for="month-filter">📅 ดูข้อมูลเดือน:</label>
-        <select id="month-filter" onchange="updateUI()"></select>
-        
-        <label for="monthly-budget" style="margin-top: 8px;">🎯 ตั้งงบรายจ่ายเดือนนี้ (บาท):</label>
-        <input type="number" id="monthly-budget" placeholder="เช่น 10000" oninput="saveBudget()">
-        <div id="budget-status" class="budget-alert"></div>
+    <!-- ==================== TAB 1: บัญชีรายรับ-รายจ่าย ==================== -->
+    <div id="tab-finance" class="tab-content active">
+        <!-- เลือกเดือน & ตั้งงบประมาณ -->
+        <div class="section-box">
+            <label for="month-filter">📅 ดูข้อมูลเดือน:</label>
+            <select id="month-filter" onchange="updateUI()"></select>
+            
+            <label for="monthly-budget" style="margin-top: 8px;">🎯 ตั้งงบรายจ่ายเดือนนี้ (บาท):</label>
+            <input type="number" id="monthly-budget" placeholder="เช่น 10000" oninput="saveBudget()">
+            <div id="budget-status" class="budget-alert"></div>
+        </div>
+
+        <!-- สรุปยอดเงิน -->
+        <div class="summary">
+            <div>
+                <h3>รายรับ</h3>
+                <p id="total-income" class="income">0.00</p>
+            </div>
+            <div>
+                <h3>รายจ่าย</h3>
+                <p id="total-expense" class="expense">0.00</p>
+            </div>
+            <div>
+                <h3>คงเหลือ</h3>
+                <p id="net-balance" class="balance">0.00</p>
+            </div>
+        </div>
+
+        <!-- กราฟแสดงสัดส่วน -->
+        <div class="chart-container">
+            <canvas id="expenseChart"></canvas>
+        </div>
+
+        <!-- ฟอร์มกรอกข้อมูล -->
+        <form id="transaction-form" class="section-box">
+            <label>✍️ เพิ่มรายการใหม่:</label>
+            <select id="type">
+                <option value="รายรับ">📥 รายรับ</option>
+                <option value="รายจ่าย" selected>📤 รายจ่าย</option>
+            </select>
+            
+            <input type="number" id="amount" placeholder="จำนวนเงิน (บาท)" required step="any">
+            
+            <label style="margin-top: 6px;">🏷️ หมวดหมู่:</label>
+            <div class="quick-buttons">
+                <button type="button" onclick="setCategory('🍜 อาหาร')">🍜 อาหาร</button>
+                <button type="button" onclick="setCategory('🚗 เดินทาง')">🚗 เดินทาง</button>
+                <button type="button" onclick="setCategory('🛍️ ช้อปปิ้ง')">🛍️ ช้อปปิ้ง</button>
+                <button type="button" onclick="setCategory('💵 เงินเดือน')">💵 เงินเดือน</button>
+            </div>
+            <input type="text" id="category" placeholder="หรือพิมพ์หมวดหมู่เอง..." required>
+            
+            <input type="text" id="description" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)">
+            
+            <label style="margin-top: 6px;">📅 วันที่:</label>
+            <div class="quick-buttons">
+                <button type="button" onclick="setDate(0)">⚡ วันนี้</button>
+                <button type="button" onclick="changeDate(-1)">◀️ ถอยหลัง 1 วัน</button>
+                <button type="button" onclick="changeDate(1)">▶️ เดินหน้า 1 วัน</button>
+            </div>
+            <input type="date" id="date" required>
+
+            <button type="submit" class="btn-success" style="margin-top: 10px;">➕ บันทึกรายการ</button>
+        </form>
+
+        <!-- ช่องค้นหาประวัติ -->
+        <div class="section-box" style="padding: 8px; margin-bottom: 8px;">
+            <input type="text" id="search-input" placeholder="🔍 ค้นหาประวัติ..." oninput="updateUI()" style="margin: 0;">
+        </div>
+
+        <!-- ประวัติรายการ -->
+        <h3 style="font-size: 15px; margin-bottom: 5px;">📜 ประวัติรายการ</h3>
+        <ul id="transaction-list"></ul>
+
+        <!-- ปุ่มสำรองข้อมูล -->
+        <div style="margin-top: 15px;">
+            <div class="backup-group">
+                <button class="btn-warning" onclick="exportData()">💾 สำรองข้อมูล</button>
+                <button class="btn-info" onclick="exportToCSV()">📊 โหลด Excel</button>
+            </div>
+            <div class="backup-group" style="margin-top: 5px;">
+                <button class="btn-warning" onclick="document.getElementById('import-file').click()">📂 กู้คืนข้อมูล</button>
+                <button class="btn-danger" onclick="clearAllData()">🗑️ ล้างทั้งหมด</button>
+                <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+            </div>
+        </div>
     </div>
 
-    <!-- สรุปยอดเงิน -->
-    <div class="summary">
-        <div>
-            <h3>รายรับ</h3>
-            <p id="total-income" class="income">0.00</p>
-        </div>
-        <div>
-            <h3>รายจ่าย</h3>
-            <p id="total-expense" class="expense">0.00</p>
-        </div>
-        <div>
-            <h3>คงเหลือ</h3>
-            <p id="net-balance" class="balance">0.00</p>
-        </div>
-    </div>
+    <!-- ==================== TAB 2: โน้ต & ไอเดีย ==================== -->
+    <div id="tab-notes" class="tab-content">
+        <!-- ฟอร์มสร้างโน้ต -->
+        <form id="note-form" class="section-box">
+            <label>💡 จดโน้ต / ไอเดียใหม่:</label>
+            <input type="text" id="note-title" placeholder="หัวข้อโน้ต (เช่น ของต้องซื้อ, ไอเดียงาน)..." required>
+            <textarea id="note-content" rows="3" placeholder="รายละเอียด... (ถ้ามีจำนวนเงิน เช่น 150 บาท จะส่งข้ามไปบันทึกบัญชีได้ง่ายขึ้น)"></textarea>
+            
+            <div style="display: flex; gap: 5px;">
+                <select id="note-tag" style="flex: 1;">
+                    <option value=" Shopping">🛍️ Shopping</option>
+                    <option value=" Idea">💡 Idea</option>
+                    <option value=" Work">💼 Work</option>
+                    <option value=" Personal">👤 Personal</option>
+                </select>
+                <button type="submit" class="btn-success" style="flex: 1; margin: 5px 0;">📌 บันทึกโน้ต</button>
+            </div>
+        </form>
 
-    <!-- กราฟแสดงสัดส่วนรายรับและรายจ่าย -->
-    <div class="chart-container">
-        <canvas id="expenseChart"></canvas>
-    </div>
-
-    <!-- ฟอร์มกรอกข้อมูล -->
-    <form id="transaction-form" class="section-box">
-        <label>✍️ เพิ่มรายการใหม่:</label>
-        <select id="type">
-            <option value="รายรับ">📥 รายรับ</option>
-            <option value="รายจ่าย">📤 รายจ่าย</option>
-        </select>
-        
-        <input type="number" id="amount" placeholder="จำนวนเงิน (บาท)" required step="any">
-        
-        <!-- หมวดหมู่ด่วน -->
-        <label style="margin-top: 6px;">🏷️ หมวดหมู่:</label>
-        <div class="quick-buttons">
-            <button type="button" onclick="setCategory('🍜 อาหาร')">🍜 อาหาร</button>
-            <button type="button" onclick="setCategory('🚗 เดินทาง')">🚗 เดินทาง</button>
-            <button type="button" onclick="setCategory('🛍️ ช้อปปิ้ง')">🛍️ ช้อปปิ้ง</button>
-            <button type="button" onclick="setCategory('💵 เงินเดือน')">💵 เงินเดือน</button>
+        <!-- กรองแท็กโน้ต -->
+        <div class="quick-buttons" style="margin-bottom: 10px;">
+            <button type="button" onclick="filterNotes('ALL')">ทั้งหมด</button>
+            <button type="button" onclick="filterNotes(' Shopping')">🛍️ Shopping</button>
+            <button type="button" onclick="filterNotes(' Idea')">💡 Idea</button>
+            <button type="button" onclick="filterNotes('PINNED')">⭐ ปักหมุด</button>
         </div>
-        <input type="text" id="category" placeholder="หรือพิมพ์หมวดหมู่เอง..." required>
-        
-        <input type="text" id="description" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)">
-        
-        <!-- ส่วนเลือกวันที่ด่วน -->
-        <label style="margin-top: 6px;">📅 วันที่:</label>
-        <div class="quick-buttons">
-            <button type="button" onclick="setDate(0)">⚡ วันนี้</button>
-            <button type="button" onclick="changeDate(-1)">◀️ ถอยหลัง 1 วัน</button>
-            <button type="button" onclick="changeDate(1)">▶️ เดินหน้า 1 วัน</button>
-        </div>
-        <input type="date" id="date" required>
 
-        <button type="submit" class="btn-success" style="margin-top: 10px;">➕ บันทึกรายการ</button>
-    </form>
-
-    <!-- ช่องค้นหาประวัติ -->
-    <div class="section-box" style="padding: 8px; margin-bottom: 8px;">
-        <input type="text" id="search-input" placeholder="🔍 ค้นหาประวัติ (เช่น กาแฟ, อาหาร)..." oninput="updateUI()" style="margin: 0;">
-    </div>
-
-    <!-- ประวัติรายการ -->
-    <h3 style="font-size: 15px; margin-bottom: 5px;">📜 ประวัติรายการ</h3>
-    <ul id="transaction-list"></ul>
-
-    <!-- ปุ่มสำรองข้อมูลและล้างข้อมูล -->
-    <div style="margin-top: 15px;">
-        <div class="backup-group">
-            <button class="btn-warning" onclick="exportData()">💾 สำรองข้อมูล</button>
-            <button class="btn-info" onclick="exportToCSV()">📊 โหลด Excel</button>
-        </div>
-        <div class="backup-group" style="margin-top: 5px;">
-            <button class="btn-warning" onclick="document.getElementById('import-file').click()">📂 กู้คืนข้อมูล</button>
-            <button class="btn-danger" onclick="clearAllData()">🗑️ ล้างทั้งหมด</button>
-            <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
-        </div>
+        <!-- รายการโน้ต -->
+        <div id="notes-list"></div>
     </div>
 </div>
 
 <script>
+    // ==================== GLOBAL DATA ====================
     let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
     let budgets = JSON.parse(localStorage.getItem('budgets')) || {};
+    let notes = JSON.parse(localStorage.getItem('notes')) || [];
+    let activeNoteFilter = 'ALL';
 
     // ธีมมืด/สว่าง
     function toggleTheme() {
@@ -292,28 +405,38 @@
         localStorage.setItem('theme', newTheme);
         updateUI();
     }
-
-    // โหลดธีมที่เคยบันทึกไว้
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.body.setAttribute('data-theme', savedTheme);
 
-    function setCategory(cat) {
-        document.getElementById('category').value = cat;
+    // สลับหน้า แท็บ
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        
+        if(tabName === 'finance') {
+            document.getElementById('tab-finance').classList.add('active');
+            event.target.classList.add('active');
+            updateUI();
+        } else {
+            document.getElementById('tab-notes').classList.add('active');
+            event.target.classList.add('active');
+            renderNotes();
+        }
     }
 
+    // ==================== FINANCE LOGIC ====================
+    function setCategory(cat) { document.getElementById('category').value = cat; }
     function setDate(daysAgo) {
         const d = new Date();
         d.setDate(d.getDate() - daysAgo);
         document.getElementById('date').value = d.toISOString().substring(0, 10);
     }
-
     function changeDate(days) {
         const dateInput = document.getElementById('date');
         let currentDate = dateInput.value ? new Date(dateInput.value) : new Date();
         currentDate.setDate(currentDate.getDate() + days);
         dateInput.value = currentDate.toISOString().substring(0, 10);
     }
-
     setDate(0);
 
     const form = document.getElementById('transaction-form');
@@ -330,14 +453,11 @@
     const monthFilterEl = document.getElementById('month-filter');
     const budgetInput = document.getElementById('monthly-budget');
     const budgetStatusEl = document.getElementById('budget-status');
-
     let expenseChart = null;
 
     function updateMonthDropdown() {
         const months = new Set();
-        transactions.forEach(t => {
-            if(t.date) months.add(t.date.substring(0, 7));
-        });
+        transactions.forEach(t => { if(t.date) months.add(t.date.substring(0, 7)); });
         const currentYearMonth = new Date().toISOString().substring(0, 7);
         months.add(currentYearMonth);
 
@@ -351,10 +471,7 @@
             option.textContent = formatMonthLabel(m);
             monthFilterEl.appendChild(option);
         });
-
-        if (sortedMonths.includes(currentSelected)) {
-            monthFilterEl.value = currentSelected;
-        }
+        if (sortedMonths.includes(currentSelected)) monthFilterEl.value = currentSelected;
     }
 
     function formatMonthLabel(yearMonth) {
@@ -384,9 +501,7 @@
                 budgetStatusEl.style.color = '#e74c3c';
                 budgetStatusEl.textContent = `🔴 เกินงบไปแล้ว ${Math.abs(diff).toLocaleString()} บาท!`;
             }
-        } else {
-            budgetStatusEl.textContent = '';
-        }
+        } else { budgetStatusEl.textContent = ''; }
     }
 
     function updateUI() {
@@ -407,7 +522,6 @@
 
         filteredTransactions.forEach((t) => {
             const originalIndex = transactions.indexOf(t);
-
             if (t.type === 'รายรับ') {
                 totalIncome += t.amount;
             } else {
@@ -425,7 +539,7 @@
                         ${t.amount.toLocaleString()} บาท
                     </span>
                 </div>
-                <button class="delete-btn" onclick="deleteTransaction(${originalIndex})">❌ ลบ</button>
+                <button class="icon-btn" onclick="deleteTransaction(${originalIndex})">❌</button>
             `;
             listElement.appendChild(li);
         });
@@ -437,25 +551,17 @@
 
         updateBudgetStatus(totalExpense);
         updateChart(categoryMap, totalIncome);
-
         localStorage.setItem('transactions', JSON.stringify(transactions));
     }
 
     function updateChart(categoryMap, totalIncome) {
         const ctx = document.getElementById('expenseChart').getContext('2d');
-        
-        // นำ "รายรับ" มาเป็นชิ้นแรกในกราฟ ร่วมกับหมวดหมู่รายจ่าย
         const labels = ['รายรับ', ...Object.keys(categoryMap)];
         const data = [totalIncome, ...Object.values(categoryMap)];
-        
-        // กำหนดสี: รายรับเป็นสีเขียว (#27ae60) ส่วนรายจ่ายใช้สีอื่นๆ
         const colors = ['#27ae60', '#e74c3c', '#3498db', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22'];
-        
         const isDark = document.body.getAttribute('data-theme') === 'dark';
 
-        if (expenseChart) {
-            expenseChart.destroy();
-        }
+        if (expenseChart) expenseChart.destroy();
 
         expenseChart = new Chart(ctx, {
             type: 'doughnut',
@@ -470,14 +576,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { 
-                        position: 'right', 
-                        labels: { 
-                            boxWidth: 12, 
-                            font: { size: 11 },
-                            color: isDark ? '#e0e0e0' : '#333'
-                        } 
-                    }
+                    legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 }, color: isDark ? '#e0e0e0' : '#333' } }
                 }
             }
         });
@@ -485,66 +584,145 @@
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        const newTransaction = {
+        transactions.push({
             type: typeInput.value,
             amount: parseFloat(amountInput.value),
             category: categoryInput.value,
             desc: descInput.value,
             date: dateInput.value
-        };
-
-        transactions.push(newTransaction);
-        monthFilterEl.value = newTransaction.date.substring(0, 7);
+        });
+        monthFilterEl.value = dateInput.value.substring(0, 7);
         updateUI();
-        
-        amountInput.value = '';
-        categoryInput.value = '';
-        descInput.value = '';
-        setDate(0);
+        amountInput.value = ''; categoryInput.value = ''; descInput.value = ''; setDate(0);
     });
 
     function deleteTransaction(index) {
-        if(confirm("คุณต้องการลบรายการนี้ใช่หรือไม่?")) {
+        if(confirm("ต้องการลบรายการนี้ใช่หรือไม่?")) {
             transactions.splice(index, 1);
             updateUI();
         }
     }
 
-    function clearAllData() {
-        if(confirm("⚠️ คำเตือน: ข้อมูลทั้งหมดจะถูกลบ ต้องการลบจริงหรือไม่?")) {
-            transactions = [];
-            budgets = {};
-            localStorage.removeItem('transactions');
-            localStorage.removeItem('budgets');
-            updateUI();
+    // ==================== NOTES & CONNECTED FEATURE ====================
+    const noteForm = document.getElementById('note-form');
+    const noteTitleInput = document.getElementById('note-title');
+    const noteContentInput = document.getElementById('note-content');
+    const noteTagInput = document.getElementById('note-tag');
+    const notesListEl = document.getElementById('notes-list');
+
+    noteForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        notes.unshift({
+            id: Date.now(),
+            title: noteTitleInput.value,
+            content: noteContentInput.value,
+            tag: noteTagInput.value,
+            pinned: false,
+            date: new Date().toLocaleDateString('th-TH')
+        });
+        localStorage.setItem('notes', JSON.stringify(notes));
+        noteTitleInput.value = ''; noteContentInput.value = '';
+        renderNotes();
+    });
+
+    function renderNotes() {
+        notesListEl.innerHTML = '';
+        let filtered = notes;
+        if(activeNoteFilter === 'PINNED') filtered = notes.filter(n => n.pinned);
+        else if(activeNoteFilter !== 'ALL') filtered = notes.filter(n => n.tag === activeNoteFilter);
+
+        filtered.forEach(note => {
+            const card = document.createElement('div');
+            card.className = `note-card ${note.pinned ? 'pinned' : ''}`;
+            card.innerHTML = `
+                <div class="note-header">
+                    <span class="tag-badge">${note.tag}</span>
+                    <span>${note.date}</span>
+                </div>
+                <div class="note-title">${note.title}</div>
+                <div class="note-content">${note.content}</div>
+                <div class="note-footer">
+                    <div>
+                        <button class="icon-btn" onclick="togglePinNote(${note.id})" title="ปักหมุด">${note.pinned ? '⭐' : '☆'}</button>
+                        <button class="icon-btn" onclick="convertToExpense('${note.title}', '${note.content}')" title="ส่งไปบันทึกรายจ่าย">💸 แปลงเป็นรายจ่าย</button>
+                    </div>
+                    <button class="icon-btn" onclick="deleteNote(${note.id})" title="ลบโน้ต">🗑️</button>
+                </div>
+            `;
+            notesListEl.appendChild(card);
+        });
+    }
+
+    function filterNotes(tag) {
+        activeNoteFilter = tag;
+        renderNotes();
+    }
+
+    function togglePinNote(id) {
+        const n = notes.find(x => x.id === id);
+        if(n) { n.pinned = !n.pinned; localStorage.setItem('notes', JSON.stringify(notes)); renderNotes(); }
+    }
+
+    function deleteNote(id) {
+        if(confirm("ต้องการลบโน้ตนี้ใช่หรือไม่?")) {
+            notes = notes.filter(x => x.id !== id);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            renderNotes();
         }
     }
 
-    function exportData() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({transactions, budgets}));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "my_expense_backup.json");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
+    // ⭐ ฟีเจอร์เชื่อมโยง: แปลงโน้ตเป็นรายการรายจ่ายในแอปการเงิน
+    function convertToExpense(title, content) {
+        // ค้นหาตัวเลขในข้อความ หรือให้ผู้ใช้นำไปใช้
+        const numbers = (title + ' ' + content).match(/\d+/g);
+        let defaultAmount = numbers ? numbers[0] : '';
+        
+        let amount = prompt(`คุณต้องการเปลี่ยนโน้ต "${title}" เป็นรายการรายจ่ายใช่หรือไม่?\nโปรดใส่จำนวนเงิน (บาท):`, defaultAmount);
+        
+        if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+            const today = new Date().toISOString().substring(0, 10);
+            transactions.push({
+                type: 'รายจ่าย',
+                amount: parseFloat(amount),
+                category: '🛍️ ช้อปปิ้ง',
+                desc: title + (content ? ` (${content})` : ''),
+                date: today
+            });
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            alert(`✅ บันทึก "${title}" เป็นรายจ่ายจำนวน ${amount} บาท เรียบร้อยแล้ว!`);
+            
+            // สลับกลับมาหน้า บัญชีรายรับ-รายจ่าย อัตโนมัติ
+            document.querySelectorAll('.nav-btn')[0].click();
+        }
     }
 
+    // Backup / Import / Export
+    function clearAllData() {
+        if(confirm("⚠️ คำเตือน: ข้อมูลทั้งหมดจะถูกลบ ต้องการลบจริงหรือไม่?")) {
+            transactions = []; budgets = {}; notes = [];
+            localStorage.clear();
+            updateUI(); renderNotes();
+        }
+    }
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({transactions, budgets, notes}));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "my_lifestyle_hub_backup.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click(); downloadAnchor.remove();
+    }
     function exportToCSV() {
         let csvContent = "\uFEFFประเภท,จำนวนเงิน,หมวดหมู่,รายละเอียด,วันที่\n";
-        transactions.forEach(t => {
-            csvContent += `"${t.type}",${t.amount},"${t.category}","${t.desc || ''}","${t.date}"\n`;
-        });
+        transactions.forEach(t => { csvContent += `"${t.type}",${t.amount},"${t.category}","${t.desc || ''}","${t.date}"\n`; });
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", url);
         downloadAnchor.setAttribute("download", "my_expense_report.csv");
         document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
+        downloadAnchor.click(); downloadAnchor.remove();
     }
-
     function importData(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -555,16 +733,14 @@
                 if (parsed.transactions) {
                     transactions = parsed.transactions;
                     budgets = parsed.budgets || {};
+                    notes = parsed.notes || [];
                     localStorage.setItem('transactions', JSON.stringify(transactions));
                     localStorage.setItem('budgets', JSON.stringify(budgets));
-                    updateUI();
+                    localStorage.setItem('notes', JSON.stringify(notes));
+                    updateUI(); renderNotes();
                     alert("✅ กู้คืนข้อมูลสำเร็จ!");
-                } else {
-                    alert("❌ รูปแบบไฟล์ไม่ถูกต้อง");
                 }
-            } catch (err) {
-                alert("❌ เกิดข้อผิดพลาดในการอ่านไฟล์");
-            }
+            } catch (err) { alert("❌ เกิดข้อผิดพลาดในการอ่านไฟล์"); }
         };
         reader.readAsText(file);
     }
