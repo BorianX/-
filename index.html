@@ -63,7 +63,7 @@
         /* Navigation Tabs */
         .nav-tabs {
             display: flex;
-            gap: 4px;
+            gap: 3px;
             margin-bottom: 15px;
             background: var(--box-bg);
             padding: 4px;
@@ -73,8 +73,8 @@
         }
         .nav-btn {
             flex: 1;
-            padding: 8px 4px;
-            font-size: 11px;
+            padding: 8px 3px;
+            font-size: 10px;
             font-weight: bold;
             border: none;
             background: none;
@@ -237,7 +237,7 @@
         .dot-inc { background: #27ae60; }
         .dot-exp { background: #e74c3c; }
 
-        /* Timeline & Card Styles */
+        /* Card Styles */
         .running-bal { font-size: 11px; color: var(--accent-color); font-weight: bold; }
         .card-item {
             background: var(--li-bg);
@@ -285,8 +285,9 @@
     <div class="nav-tabs">
         <button class="nav-btn active" onclick="switchTab('finance')">💰 บัญชี</button>
         <button class="nav-btn" onclick="switchTab('calendar')">📅 ปฏิทิน</button>
-        <button class="nav-btn" onclick="switchTab('calc')">📈 ดอกเบี้ยทบต้น</button>
-        <button class="nav-btn" onclick="switchTab('wishlist')">🛍️ อยากได้ vs จำเป็น</button>
+        <button class="nav-btn" onclick="switchTab('yearly')">📊 สถิติปี</button>
+        <button class="nav-btn" onclick="switchTab('meal')">🍽️ สุ่มเมนู</button>
+        <button class="nav-btn" onclick="switchTab('wishlist')">🛍️ อยากได้</button>
         <button class="nav-btn" onclick="switchTab('notes')">💡 โน้ต</button>
     </div>
     
@@ -390,40 +391,62 @@
         </div>
     </div>
 
-    <!-- ==================== TAB 3: ดอกเบี้ยทบต้น (Compound Calc) ==================== -->
-    <div id="tab-calc" class="tab-content">
-        <div class="section-box">
-            <label>💰 เงินออมเริ่มต้น (บาท):</label>
-            <input type="number" id="calc-init" value="10000">
-            
-            <label>📥 ออมเพิ่มทุกเดือน (บาท):</label>
-            <input type="number" id="calc-monthly" value="3000">
-
-            <label>⏳ ระยะเวลา (ปี):</label>
-            <input type="number" id="calc-years" value="10">
-
-            <label>📈 ผลตอบแทนคาดหวัง (% ต่อปี):</label>
-            <div class="quick-buttons">
-                <button type="button" onclick="setRate(2.5)">2.5% (เงินฝาก)</button>
-                <button type="button" onclick="setRate(5.0)">5.0% (กองทุน)</button>
-                <button type="button" onclick="setRate(8.0)">8.0% (หุ้น S&P500)</button>
+    <!-- ==================== TAB 3: สถิติภาพรวมประจำปี (Yearly Insights) ==================== -->
+    <div id="tab-yearly" class="tab-content">
+        <div class="section-box" style="text-align: center;">
+            <label>📊 ภาพรวมสถิติประจำปี</label>
+            <select id="yearly-select" onchange="renderYearlyStats()" style="margin-top: 5px;"></select>
+        </div>
+        
+        <div class="summary" style="margin-bottom: 12px;">
+            <div>
+                <h3>รายรับรวม</h3>
+                <p id="yearly-income" class="income">0 ฿</p>
             </div>
-            <input type="number" id="calc-rate" value="8.0" step="0.1">
-
-            <button class="btn-success" onclick="calculateCompound()" style="margin-top:8px;">🧮 คำนวณจำลองอนาคต</button>
+            <div>
+                <h3>รายจ่ายรวม</h3>
+                <p id="yearly-expense" class="expense">0 ฿</p>
+            </div>
+            <div>
+                <h3>คงเหลือสุทธิ</h3>
+                <p id="yearly-balance" class="balance">0 ฿</p>
+            </div>
         </div>
 
-        <div id="calc-result" class="section-box" style="display:none; text-align:center;">
-            <h3 style="margin:0; font-size:14px; color:#888;">คาดการณ์ยอดเงินในอนาคต</h3>
-            <h1 id="calc-total" style="color:#27ae60; margin:5px 0;">0 ฿</h1>
-            <div style="font-size:12px; color:#666; display:flex; justify-content:space-around; margin-top:10px;">
-                <div>เงินต้นรวม: <br><strong id="calc-principal" style="color:var(--text-color);">0 ฿</strong></div>
-                <div>ดอกเบี้ย/กำไรทบต้น: <br><strong id="calc-interest" style="color:#3498db;">0 ฿</strong></div>
-            </div>
+        <div class="section-box">
+            <h3 style="font-size: 14px; margin-top:0;">📈 สรุปรายจ่ายแยกตามเดือน</h3>
+            <ul id="yearly-months-list"></ul>
         </div>
     </div>
 
-    <!-- ==================== TAB 4: Wishlist (อยากได้ vs จำเป็น) ==================== -->
+    <!-- ==================== TAB 4: "วันนี้กินอะไรดี?" (Random Meal Picker) ==================== -->
+    <div id="tab-meal" class="tab-content">
+        <div class="section-box" style="text-align: center; padding: 20px;">
+            <h3 style="margin-top: 0; color: var(--accent-color);">🍽️ วันนี้กินอะไรดี?</h3>
+            <p style="font-size: 13px; color: #888;">คิดไม่ออกให้ระบบช่วยสุ่มเมนูโปรดของคุณสิ!</p>
+            
+            <div id="meal-result-box" style="background: var(--summary-bg); padding: 20px; border-radius: 10px; margin: 15px 0;">
+                <h2 id="meal-display-text" style="margin:0; font-size: 22px; color: var(--text-color);">กดปุ่มสุ่มด้านล่างเลย! 😋</h2>
+            </div>
+
+            <button class="btn-success" onclick="randomMeal()" style="font-size: 16px; padding: 12px;">🎲 สุ่มเมนูอาหารทันที</button>
+        </div>
+
+        <form id="meal-form" class="section-box">
+            <label>➕ เพิ่มเมนูโปรดของคุณเอง:</label>
+            <div style="display: flex; gap: 5px;">
+                <input type="text" id="new-meal-input" placeholder="เช่น ข้าวกะเพราหมูสับไข่ดาว..." required style="margin:0; flex:1;">
+                <button type="submit" class="btn-info" style="width: 80px; margin:0;">เพิ่ม</button>
+            </div>
+        </form>
+
+        <div class="section-box">
+            <label>📜 รายการเมนูทั้งหมดในระบบ:</label>
+            <ul id="meal-list" style="max-height: 150px;"></ul>
+        </div>
+    </div>
+
+    <!-- ==================== TAB 5: Wishlist (อยากได้ vs จำเป็น) ==================== -->
     <div id="tab-wishlist" class="tab-content">
         <form id="wishlist-form" class="section-box">
             <label>🛍️ เพิ่มของที่อยากได้ (ดักความอยาก 3 วัน):</label>
@@ -446,7 +469,7 @@
         <div id="wishlist-container"></div>
     </div>
 
-    <!-- ==================== TAB 5: โน้ต & ไอเดีย ==================== -->
+    <!-- ==================== TAB 6: โน้ต & ไอเดีย ==================== -->
     <div id="tab-notes" class="tab-content">
         <form id="note-form" class="section-box">
             <label>💡 จดโน้ต / ไอเดียใหม่:</label>
@@ -483,10 +506,14 @@
     let budgets = JSON.parse(localStorage.getItem('budgets')) || {};
     let notes = JSON.parse(localStorage.getItem('notes')) || [];
     let wishlists = JSON.parse(localStorage.getItem('wishlists')) || [];
+    let meals = JSON.parse(localStorage.getItem('meals')) || [
+        "🍜 ข้าวกะเพราหมูสับไข่ดาว", "🍲 สุกี้แห้งทะเล", "🍛 ข้าวหมูทอดกระเทียม",
+        "🍜 บะหมี่เกี๊ยวหมูแดง", "🥗 ส้มตำ ไก่ย่าง ข้าวเหนียว", "🍳 ข้าวไข่เจียวหมูสับ",
+        "🍜 ข้าวขาหมู", "🍛 ข้าวหน้าไก่เทอริยากิ", "🍲 ก๋วยเตี๋ยวเรือต้มยำ", "🍔 แฮมเบอร์เกอร์ / พิซซ่า"
+    ];
     let activeNoteFilter = 'ALL';
     let currentCalDate = new Date();
 
-    // ฟังก์ชันสร้างกล่องยืนยัน/ยกเลิกแบบสวยงามแทน alert/confirm เดิม
     function showCustomConfirm(message, onConfirm) {
         const container = document.getElementById('custom-modal-container');
         container.innerHTML = `
@@ -532,8 +559,12 @@
         } else if(tabName === 'calendar') {
             document.getElementById('tab-calendar').classList.add('active');
             renderCalendar();
-        } else if(tabName === 'calc') {
-            document.getElementById('tab-calc').classList.add('active');
+        } else if(tabName === 'yearly') {
+            document.getElementById('tab-yearly').classList.add('active');
+            initYearlyDropdown();
+        } else if(tabName === 'meal') {
+            document.getElementById('tab-meal').classList.add('active');
+            renderMealList();
         } else if(tabName === 'wishlist') {
             document.getElementById('tab-wishlist').classList.add('active');
             renderWishlist();
@@ -596,29 +627,7 @@
     function formatMonthLabel(yearMonth) {
         const [year, month] = yearMonth.split('-');
         const thaiMonths = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-        return `${thaiMonths[parseInt(month)]} ${parseInt(year) + 543}`;
-    }
-
-    function saveBudget() {
-        const selectedMonth = monthFilterEl.value;
-        budgets[selectedMonth] = parseFloat(budgetInput.value) || 0;
-        localStorage.setItem('budgets', JSON.stringify(budgets));
-        updateBudgetStatus();
-    }
-
-    function updateBudgetStatus(totalExpense = 0) {
-        const selectedMonth = monthFilterEl.value;
-        const limit = budgets[selectedMonth] || 0;
-        budgetInput.value = limit > 0 ? limit : '';
-
-        if (limit > 0) {
-            const diff = limit - totalExpense;
-            if (diff >= 0) {
-                budgetStatusEl.style.color = '#27ae60';
-                budgetStatusEl.textContent = `🟢 เหลือใช้อีก ${diff.toLocaleString()} บาท (งบ ${limit.toLocaleString()} บ.)`;
-            } else {
-                budgetStatusEl.style.color = '#e74c3c';
-                budgetStatusEl.textContent = `🔴 เกินงบไปแล้ว ${Math.abs(diff).toLocaleString()} บาท!`;
+        return `${thaiMonths[parseInt(month)]} ${parseInt(year) + 543}`; }  function saveBudget() { const selectedMonth = monthFilterEl.value; budgets[selectedMonth] = parseFloat(budgetInput.value) \vert{}\vert{} 0; localStorage.setItem('budgets', JSON.stringify(budgets)); updateBudgetStatus(); }  function updateBudgetStatus(totalExpense = 0) { const selectedMonth = monthFilterEl.value; const limit = budgets[selectedMonth] \vert{}\vert{} 0; budgetInput.value = limit > 0 ? limit : '';  if (limit > 0) { const diff = limit - totalExpense; if (diff >= 0) { budgetStatusEl.style.color = '#27ae60'; budgetStatusEl.textContent = `🟢 เหลือใช้อีก ${diff.toLocaleString()} บาท (งบ ${limit.toLocaleString()} บ.)`; } else { budgetStatusEl.style.color = '#e74c3c'; budgetStatusEl.textContent = `🔴 เกินงบไปแล้ว ${Math.abs(diff).toLocaleString()} บาท!`;
             }
         } else { budgetStatusEl.textContent = ''; }
     }
@@ -656,7 +665,7 @@
             li.className = t.type;
             li.innerHTML = `
                 <div>
-                    <strong>[${t.type}] ${t.category}</strong> ${t.desc ? '('+t.desc+')' : ''}<br>
+                    <strong>[${t.type}] ${t.category}</strong>${t.desc ? '('+t.desc+')' : ''}<br>
                     <span class="date-text">📅 ${t.date}</span> | <span class="running-bal">สะสม: ${runningBalance.toLocaleString()} ฿</span><br>
                     <span style="color:${t.type === 'รายรับ' ? '#27ae60' : '#e74c3c'}; font-weight:bold;">
                         ${t.amount.toLocaleString()} บาท
@@ -764,14 +773,7 @@
         }
 
         for(let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayTx = transactions.filter(t => t.date === dateStr);
-            
-            const hasInc = dayTx.some(t => t.type === 'รายรับ');
-            const hasExp = dayTx.some(t => t.type === 'รายจ่าย');
-
-            const cell = document.createElement('div');
-            cell.className = `cal-cell ${dateStr === todayStr ? 'today' : ''}`;
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`; const dayTx = transactions.filter(t => t.date === dateStr);  const hasInc = dayTx.some(t => t.type === 'รายรับ'); const hasExp = dayTx.some(t => t.type === 'รายจ่าย');  const cell = document.createElement('div'); cell.className = `cal-cell ${dateStr === todayStr ? 'today' : ''}`;
             cell.onclick = () => selectCalDate(dateStr, dayTx);
             cell.innerHTML = `
                 <span>${day}</span>
@@ -807,38 +809,135 @@
             const li = document.createElement('li');
             li.className = t.type;
             li.innerHTML = `
-                <span>[${t.type}] ${t.category}</span>
+                <span>[${t.type}]${t.category}</span>
                 <strong style="color:${t.type==='รายรับ'?'#27ae60':'#e74c3c'}">${t.amount.toLocaleString()} ฿</strong>
             `;
             listEl.appendChild(li);
         });
     }
 
-    // ==================== COMPOUND INTEREST CALCULATOR ====================
-    function setRate(val) { document.getElementById('calc-rate').value = val; }
-    function calculateCompound() {
-        const P = parseFloat(document.getElementById('calc-init').value) || 0;
-        const PMT = parseFloat(document.getElementById('calc-monthly').value) || 0;
-        const years = parseFloat(document.getElementById('calc-years').value) || 0;
-        const annualRate = (parseFloat(document.getElementById('calc-rate').value) || 0) / 100;
+    // ==================== YEARLY STATS FEATURE ====================
+    function initYearlyDropdown() {
+        const years = new Set();
+        transactions.forEach(t => { if(t.date) years.add(t.date.substring(0, 4)); });
+        const currentYear = new Date().getFullYear().toString();
+        years.add(currentYear);
 
-        const months = years * 12;
-        const r = annualRate / 12;
+        const sortedYears = Array.from(years).sort().reverse();
+        const selectEl = document.getElementById('yearly-select');
+        const currentSelected = selectEl.value || currentYear;
+        selectEl.innerHTML = '';
 
-        let total = P * Math.pow(1 + r, months);
-        if (r > 0) {
-            total += PMT * ((Math.pow(1 + r, months) - 1) / r);
-        } else {
-            total += PMT * months;
+        sortedYears.forEach(y => {
+            const option = document.createElement('option');
+            option.value = y;
+            option.textContent = `ปี พ.ศ. ${parseInt(y) + 543} (ค.ศ. ${y})`;
+            selectEl.appendChild(option);
+        });
+        if(sortedYears.includes(currentSelected)) selectEl.value = currentSelected;
+        renderYearlyStats();
+    }
+
+    function renderYearlyStats() {
+        const selectedYear = document.getElementById('yearly-select').value;
+        let totalInc = 0;
+        let totalExp = 0;
+        let monthMap = {};
+
+        for(let i=1; i<=12; i++) {
+            const mStr = String(i).padStart(2, '0');
+            monthMap[mStr] = { inc: 0, exp: 0 };
         }
 
-        const totalPrincipal = P + (PMT * months);
-        const totalInterest = total - totalPrincipal;
+        transactions.forEach(t => {
+            if(t.date && t.date.startsWith(selectedYear)) {
+                const m = t.date.substring(5, 7);
+                if(t.type === 'รายรับ') {
+                    totalInc += t.amount;
+                    if(monthMap[m]) monthMap[m].inc += t.amount;
+                } else {
+                    totalExp += t.amount;
+                    if(monthMap[m]) monthMap[m].exp += t.amount;
+                }
+            }
+        });
 
-        document.getElementById('calc-result').style.display = 'block';
-        document.getElementById('calc-total').textContent = Math.round(total).toLocaleString() + ' ฿';
-        document.getElementById('calc-principal').textContent = Math.round(totalPrincipal).toLocaleString() + ' ฿';
-        document.getElementById('calc-interest').textContent = Math.round(totalInterest).toLocaleString() + ' ฿';
+        document.getElementById('yearly-income').textContent = totalInc.toLocaleString() + ' ฿';
+        document.getElementById('yearly-expense').textContent = totalExp.toLocaleString() + ' ฿';
+        document.getElementById('yearly-balance').textContent = (totalInc - totalExp).toLocaleString() + ' ฿';
+
+        const thaiMonths = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        const monthsListEl = document.getElementById('yearly-months-list');
+        monthsListEl.innerHTML = '';
+
+        Object.keys(monthMap).forEach(m => {
+            const data = monthMap[m];
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.justifyContent = 'space-between';
+            li.style.padding = '6px 0';
+            li.style.borderBottom = '1px solid var(--box-border)';
+            li.innerHTML = `
+                <span><strong>${thaiMonths[parseInt(m)]}</strong></span>
+                <div>
+                    <span style="color:#27ae60; margin-right:10px;">+${data.inc.toLocaleString()}</span>
+                    <span style="color:#e74c3c;">-${data.exp.toLocaleString()}</span>
+                </div>
+            `;
+            monthsListEl.appendChild(li);
+        });
+    }
+
+    // ==================== RANDOM MEAL PICKER ====================
+    function randomMeal() {
+        const displayEl = document.getElementById('meal-display-text');
+        if(meals.length === 0) {
+            displayEl.textContent = "ยังไม่มีเมนูในระบบ ลองเพิ่มดูก่อนครับ!";
+            return;
+        }
+        // เอฟเฟกต์สุ่มสนุกๆ
+        let count = 0;
+        const interval = setInterval(() => {
+            const randomIndex = Math.floor(Math.random() * meals.length);
+            displayEl.textContent = meals[randomIndex];
+            count++;
+            if(count > 10) clearInterval(interval);
+        }, 80);
+    }
+
+    const mealForm = document.getElementById('meal-form');
+    mealForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const input = document.getElementById('new-meal-input');
+        const val = input.value.trim();
+        if(val && !meals.includes(val)) {
+            meals.push(val);
+            localStorage.setItem('meals', JSON.stringify(meals));
+            input.value = '';
+            renderMealList();
+            alert(`✅ เพิ่มเมนู "${val}" สำเร็จ!`);
+        }
+    });
+
+    function renderMealList() {
+        const listEl = document.getElementById('meal-list');
+        listEl.innerHTML = '';
+        meals.forEach((m, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${m}</span>
+                <button class="icon-btn" onclick="deleteMeal(${index})">❌</button>
+            `;
+            listEl.appendChild(li);
+        });
+    }
+
+    function deleteMeal(index) {
+        showCustomConfirm("ต้องการลบเมนูนี้ออกจากระบบใช่หรือไม่?", function() {
+            meals.splice(index, 1);
+            localStorage.setItem('meals', JSON.stringify(meals));
+            renderMealList();
+        });
     }
 
     // ==================== WISHLIST FEATURE (3-DAY RULE) ====================
@@ -910,53 +1009,7 @@
                     type: 'รายจ่าย',
                     amount: item.price,
                     category: '🛍️ ช้อปปิ้ง',
-                    desc: `[Wishlist] ${item.title}`,
-                    date: today
-                });
-                wishlists = wishlists.filter(w => w.id !== id);
-                localStorage.setItem('transactions', JSON.stringify(transactions));
-                localStorage.setItem('wishlists', JSON.stringify(wishlists));
-                document.querySelectorAll('.nav-btn')[0].click();
-            });
-        }
-    }
-
-    function deleteWishItem(id) {
-        showCustomConfirm("ยินดีด้วยที่คุณตัดใจได้! ต้องการลบรายการนี้ใช่หรือไม่?", function() {
-            wishlists = wishlists.filter(w => w.id !== id);
-            localStorage.setItem('wishlists', JSON.stringify(wishlists));
-            renderWishlist();
-        });
-    }
-
-    // ==================== NOTES FEATURE ====================
-    const noteForm = document.getElementById('note-form');
-    noteForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        notes.unshift({
-            id: Date.now(),
-            title: document.getElementById('note-title').value,
-            content: document.getElementById('note-content').value,
-            tag: document.getElementById('note-tag').value,
-            pinned: false,
-            date: new Date().toLocaleDateString('th-TH')
-        });
-        localStorage.setItem('notes', JSON.stringify(notes));
-        document.getElementById('note-title').value = '';
-        document.getElementById('note-content').value = '';
-        renderNotes();
-    });
-
-    function renderNotes() {
-        const notesListEl = document.getElementById('notes-list');
-        notesListEl.innerHTML = '';
-        let filtered = notes;
-        if(activeNoteFilter === 'PINNED') filtered = notes.filter(n => n.pinned);
-        else if(activeNoteFilter !== 'ALL') filtered = notes.filter(n => n.tag === activeNoteFilter);
-
-        filtered.forEach(note => {
-            const card = document.createElement('div');
-            card.className = `card-item ${note.pinned ? 'pinned' : ''}`;
+                    desc: `[Wishlist] ${item.title}`, date: today }); wishlists = wishlists.filter(w => w.id !== id); localStorage.setItem('transactions', JSON.stringify(transactions)); localStorage.setItem('wishlists', JSON.stringify(wishlists)); document.querySelectorAll('.nav-btn')[0].click(); }); } }  function deleteWishItem(id) { showCustomConfirm("ยินดีด้วยที่คุณตัดใจได้! ต้องการลบรายการนี้ใช่หรือไม่?", function() { wishlists = wishlists.filter(w => w.id !== id); localStorage.setItem('wishlists', JSON.stringify(wishlists)); renderWishlist(); }); }  // ==================== NOTES FEATURE ==================== const noteForm = document.getElementById('note-form'); noteForm.addEventListener('submit', function(e) { e.preventDefault(); notes.unshift({ id: Date.now(), title: document.getElementById('note-title').value, content: document.getElementById('note-content').value, tag: document.getElementById('note-tag').value, pinned: false, date: new Date().toLocaleDateString('th-TH') }); localStorage.setItem('notes', JSON.stringify(notes)); document.getElementById('note-title').value = ''; document.getElementById('note-content').value = ''; renderNotes(); });  function renderNotes() { const notesListEl = document.getElementById('notes-list'); notesListEl.innerHTML = ''; let filtered = notes; if(activeNoteFilter === 'PINNED') filtered = notes.filter(n => n.pinned); else if(activeNoteFilter !== 'ALL') filtered = notes.filter(n => n.tag === activeNoteFilter);  filtered.forEach(note => { const card = document.createElement('div'); card.className = `card-item ${note.pinned ? 'pinned' : ''}`;
             card.innerHTML = `
                 <div class="card-header">
                     <span class="tag-badge">${note.tag}</span>
@@ -991,15 +1044,7 @@
     function convertToExpense(title, content) {
         const numbers = (title + ' ' + content).match(/\d+/g);
         let defaultAmount = numbers ? numbers[0] : '';
-        let amount = prompt(`คุณต้องการเปลี่ยนโน้ต "${title}" เป็นรายการรายจ่ายใช่หรือไม่?\nโปรดใส่จำนวนเงิน (บาท):`, defaultAmount);
-        if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
-            showCustomConfirm(`ยืนยันบันทึก "${title}" จำนวน ${amount} บาท เป็นรายจ่าย?`, function() {
-                const today = new Date().toISOString().substring(0, 10);
-                transactions.push({
-                    type: 'รายจ่าย',
-                    amount: parseFloat(amount),
-                    category: '🛍️ ช้อปปิ้ง',
-                    desc: title + (content ? ` (${content})` : ''),
+        let amount = prompt(`คุณต้องการเปลี่ยนโน้ต "${title}" เป็นรายการรายจ่ายใช่หรือไม่?\nโปรดใส่จำนวนเงิน (บาท):`, defaultAmount); if (amount && !isNaN(amount) && parseFloat(amount) > 0) { showCustomConfirm(`ยืนยันบันทึก "${title}" จำนวน ${amount} บาท เป็นรายจ่าย?`, function() { const today = new Date().toISOString().substring(0, 10); transactions.push({ type: 'รายจ่าย', amount: parseFloat(amount), category: '🛍️ ช้อปปิ้ง', desc: title + (content ? ` (${content})` : ''),
                     date: today
                 });
                 localStorage.setItem('transactions', JSON.stringify(transactions));
@@ -1011,13 +1056,13 @@
     // ==================== BACKUP / IMPORT / EXPORT ====================
     function clearAllData() {
         showCustomConfirm("⚠️ คำเตือน: ข้อมูลทั้งหมดจะถูกลบ ต้องการลบจริงหรือไม่?", function() {
-            transactions = []; budgets = {}; notes = []; wishlists = [];
+            transactions = []; budgets = {}; notes = []; wishlists = []; meals = [];
             localStorage.clear();
             updateUI();
         });
     }
     function exportData() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({transactions, budgets, notes, wishlists}));
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({transactions, budgets, notes, wishlists, meals}));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
         downloadAnchor.setAttribute("download", "my_lifestyle_hub_backup.json");
@@ -1026,41 +1071,4 @@
     }
     function exportToCSV() {
         let csvContent = "\uFEFFประเภท,จำนวนเงิน,หมวดหมู่,รายละเอียด,วันที่\n";
-        transactions.forEach(t => { csvContent += `"${t.type}",${t.amount},"${t.category}","${t.desc || ''}","${t.date}"\n`; });
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", url);
-        downloadAnchor.setAttribute("download", "my_expense_report.csv");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click(); downloadAnchor.remove();
-    }
-    function importData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const parsed = JSON.parse(e.target.result);
-                if (parsed.transactions) {
-                    transactions = parsed.transactions;
-                    budgets = parsed.budgets || {};
-                    notes = parsed.notes || [];
-                    wishlists = parsed.wishlists || [];
-                    localStorage.setItem('transactions', JSON.stringify(transactions));
-                    localStorage.setItem('budgets', JSON.stringify(budgets));
-                    localStorage.setItem('notes', JSON.stringify(notes));
-                    localStorage.setItem('wishlists', JSON.stringify(wishlists));
-                    updateUI();
-                    showCustomConfirm("✅ กู้คืนข้อมูลสำเร็จ!", function() {});
-                }
-            } catch (err) { alert("❌ เกิดข้อผิดพลาดในการอ่านไฟล์"); }
-        };
-        reader.readAsText(file);
-    }
-
-    updateUI();
-</script>
-
-</body>
-</html>
+        transactions.forEach(t => { csvContent += `"${t.type}",${t.
